@@ -13,6 +13,13 @@ export const GRADE: Record<SafetyScore["grade"], string> = {
   UNKNOWN: "정보 확인 필요",
 };
 export const CONFIDENCE = { HIGH: "높음", MEDIUM: "보통", LOW: "낮음" };
+export function scoreSummary(score: Pick<SafetyScore, "grade" | "coverage" | "total">) {
+  const sparse = score.coverage < 60;
+  return {
+    label: score.grade === "HOLD" ? GRADE.HOLD : sparse ? "정보 확인 필요" : GRADE[score.grade],
+    total: sparse ? null : score.total,
+  };
+}
 export const FACILITY_LABEL: Record<FacilityType, string> = {
   MEDICAL: "의료시설",
   POLICE: "경찰시설",

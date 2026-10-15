@@ -1,24 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { MapPin, Map, ArrowUpRight, LoaderCircle } from "lucide-react";
 import type { Coordinates, FacilityType } from "../../../shared/models";
 import { loadKakaoMap } from "../services/kakaoMapApi";
 import { mapLink } from "../utils/format";
+import { MapErrorBoundary, MapFailureNotice } from './MapErrorBoundary';
+const TourSafeMapPanel = lazy(() => import("./TourSafeMapPanel"));
 
 export interface MapPoint extends Coordinates {
   id: string;
   name: string;
-  type: FacilityType | "SPOT";
+  type: FacilityType | "SPOT" | "CCTV" | "HOSPITAL";
+  category?: string;
+  emergency?: boolean | null;
 }
 const color: Record<MapPoint["type"], string> = {
+  CCTV: "#73c9a5",
   SPOT: "#146451",
   MEDICAL: "#d76653",
+  HOSPITAL: "#bc7997",
   POLICE: "#5081bc",
   TOURIST_INFO: "#b28339",
   TOILET: "#8b76b3",
 };
 const label: Record<MapPoint["type"], string> = {
+  CCTV: "CCTV",
   SPOT: "관광지",
   MEDICAL: "의료",
+  HOSPITAL: "병원·의원",
   POLICE: "경찰",
   TOURIST_INFO: "안내소",
   TOILET: "화장실",
@@ -43,6 +51,7 @@ export function MapPanel({
     onSelectRef.current = onSelect;
   }, [onSelect]);
   useEffect(() => {
+    if (!demo) return;
     let cancelled = false,
       cleanup = () => {};
     setStatus("LOADING");
@@ -97,7 +106,8 @@ export function MapPanel({
       cancelled = true;
       cleanup();
     };
-  }, [points]);
+  }, [points, demo]);
+  if (!demo) return <MapErrorBoundary fallback={<div className="map-recovery-list"><MapFailureNotice />{points.map(point => <button key={point.id} onClick={() => onSelect?.(point.id)}>{point.name}</button>)}</div>}><Suspense fallback={<div className="ts-map-placeholder" role="status">지도를 준비하고 있어요…</div>}><TourSafeMapPanel points={points} selected={selected} onSelect={onSelect} /></Suspense></MapErrorBoundary>;
   const selectedPoint = points.find((p) => p.id === selected) || points[0];
   const latMin = Math.min(...points.map((p) => p.lat)),
     latMax = Math.max(...points.map((p) => p.lat));

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   ChevronDown,
   LocateFixed,
@@ -13,6 +13,9 @@ import type { Region } from "../../../shared/models";
 import { Modal } from "./Modal";
 import { searchRegions } from "../services/api";
 import { DEFAULT_REGION } from "../config/constants";
+import { createSearchLocationController } from "../utils/searchLocation";
+
+const LOCATION_SHARING_NOTICE = "관광지 찾기를 누르면 주변 조회를 위해 좌표를 서버로 보내요.";
 
 interface Props {
   region: Region;
@@ -23,6 +26,7 @@ interface Props {
   onKids: (value: boolean) => void;
   loading: boolean;
   onSearch: () => void;
+  active?: boolean;
 }
 export function SearchPanel({
   region,
@@ -33,44 +37,46 @@ export function SearchPanel({
   onKids,
   loading,
   onSearch,
+  active = true,
 }: Props) {
   const [open, setOpen] = useState(false),
     [locating, setLocating] = useState(false),
     [message, setMessage] = useState("");
-  function locate() {
-    if (!navigator.geolocation) {
-      setMessage("위치 기능을 사용할 수 없습니다. 지역을 직접 선택해 주세요.");
-      return;
+  const [locationRequest] = useState(() => createSearchLocationController());
+  useLayoutEffect(() => {
+    if (!active) {
+      locationRequest.cancel();
+      setLocating(false);
+      setOpen(false);
+      setMessage("");
     }
+    return () => locationRequest.cancel();
+  }, [active, locationRequest]);
+
+  function cancelLocation() {
+    locationRequest.cancel();
+    setLocating(false);
+  }
+  function close() {
+    cancelLocation();
+    setMessage("");
+    setOpen(false);
+  }
+  function locate() {
+    if (!active) return;
     setLocating(true);
     setMessage("");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    locationRequest.request(
+      navigator.geolocation,
+      (confirmedRegion) => {
         setLocating(false);
-        const { latitude: lat, longitude: lng } = position.coords;
-        if (lat < 33 || lat > 39.5 || lng < 124 || lng > 132) {
-          setMessage(
-            "현재 대한민국 지역을 지원합니다. 지역을 직접 선택해 주세요.",
-          );
-          return;
-        }
-        onRegion({
-          name: "내 현재 위치",
-          address: `위치 정확도 약 ${Math.round(position.coords.accuracy)}m`,
-          lat,
-          lng,
-        });
+        onRegion(confirmedRegion);
         setOpen(false);
       },
-      (error) => {
+      (errorMessage) => {
         setLocating(false);
-        setMessage(
-          error.code === 1
-            ? "위치 권한이 허용되지 않았습니다. 선택한 위치를 사용하거나 지역을 직접 검색해 주세요."
-            : "현재 위치를 찾지 못했습니다. 지역을 직접 선택해 주세요.",
-        );
+        setMessage(errorMessage);
       },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
     );
   }
   return (
@@ -146,24 +152,29 @@ export function SearchPanel({
           {loading ? "찾는 중" : "관광지 찾기"}
         </button>
       </form>
+      <p className="small muted">{LOCATION_SHARING_NOTICE}</p>
       {message && !open && (
         <p className="inline-notice" role="status">
           <CircleAlert size={16} />
           {message}
         </p>
       )}
-      {open && (
+      {open && active && (
         <Modal
           title="출발 위치 선택"
-          onClose={() => setOpen(false)}
+          onClose={close}
           className="region-dialog"
         >
           <RegionSearch
             onSelect={(r) => {
+              close();
               onRegion(r);
-              setOpen(false);
             }}
             onLocate={locate}
+            onCancelLocate={() => {
+              cancelLocation();
+              setMessage("위치 확인을 취소했어요. 지역을 직접 선택할 수 있어요.");
+            }}
             locating={locating}
             message={message}
           />
@@ -175,11 +186,13 @@ export function SearchPanel({
 function RegionSearch({
   onSelect,
   onLocate,
+  onCancelLocate,
   locating,
   message,
 }: {
   onSelect: (r: Region) => void;
   onLocate: () => void;
+  onCancelLocate: () => void;
   locating: boolean;
   message: string;
 }) {
@@ -226,6 +239,12 @@ function RegionSearch({
         {locating ? "현재 위치 확인 중…" : "현재 위치 사용"}
         <ArrowRight size={17} />
       </button>
+      {locating && (
+        <button type="button" className="secondary" onClick={onCancelLocate}>
+          위치 확인 취소
+        </button>
+      )}
+      <p className="small muted">{LOCATION_SHARING_NOTICE}</p>
       {message && (
         <p className="notice" role="status">
           {message}
@@ -244,8 +263,8 @@ function RegionSearch({
       </label>
       <p className="small muted">
         {preset
-          ? "기본 지역 선택 · 자유 검색은 지도 연결 후 이용할 수 있어요."
-          : "장소를 선택하면 그 주변에서 찾아드려요."}
+          ? "기본 지역 선택 · 장소 이름 검색은 아직 준비 중이에요."
+          : "지역·관광지 이름을 두 글자 이상 입력해 주세요. 선택한 장소 주변에서 찾아드려요."}
       </p>
       <div className="region-results">
         {loading ? (

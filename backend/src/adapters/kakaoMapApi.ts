@@ -37,3 +37,27 @@ export async function findRegions(query: string): Promise<Region[]> {
       : [];
   });
 }
+
+export interface CoordinateRegion {
+  province: string;
+  district: string;
+  area: string;
+}
+
+// Keep the requested coordinates as the search origin; Kakao's returned x/y is
+// an administrative area's representative point, not the user's position.
+export async function regionAtCoordinates(
+  point: Coordinates,
+  request: typeof fetchData = fetchData,
+): Promise<CoordinateRegion> {
+  if (!validCoordinates(point.lat, point.lng)) throw new Error('INVALID_COORDINATES');
+  if (!config.kakaoKey) throw new Error('REGION_LOOKUP_NOT_CONFIGURED');
+  const data = await request(buildUrl('https://dapi.kakao.com/v2/local/geo/coord2regioncode.json', {
+    x: point.lng, y: point.lat,
+  }), { headers: { Authorization: `KakaoAK ${config.kakaoKey}` }, ttl: 10 * 60_000 });
+  const region = list(record(data).documents).find(row => row.region_type === 'B');
+  const province = str(region?.region_1depth_name);
+  const district = str(region?.region_2depth_name) || '';
+  if (!province || (!district && province !== '세종특별자치시')) throw new Error('REGION_NOT_FOUND');
+  return { province, district, area: [province, district].filter(Boolean).join(' ') };
+}

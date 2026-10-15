@@ -1,4 +1,5 @@
 node_modules/
+backend/data/public-facilities/
 dist/
 frontend/dist/
 .env

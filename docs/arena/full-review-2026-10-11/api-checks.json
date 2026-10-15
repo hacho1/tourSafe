@@ -1,0 +1,36 @@
+[
+  {
+    "path": "/api/health",
+    "status": 200,
+    "mode": "DEMO",
+    "result": null,
+    "count": 0,
+    "cache": [
+      "no-store"
+    ]
+  },
+  {
+    "path": "/api/hospitals?region=seongsu",
+    "status": 200,
+    "mode": "DEMO",
+    "result": "OK",
+    "count": 4,
+    "cache": [
+      "no-store"
+    ]
+  },
+  {
+    "path": "/api/hospitals?region=haeundae",
+    "status": 200,
+    "mode": "DEMO",
+    "result": "OK",
+    "count": 0,
+    "cache": [
+      "no-store"
+    ]
+  },
+  {
+    "path": "/api/hospitals?region=invalid",
+    "status": 400
+  }
+]

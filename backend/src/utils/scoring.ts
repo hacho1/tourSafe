@@ -1,4 +1,5 @@
 import type {
+  AdapterStatus,
   Evidence,
   SafetyScore,
   ScoreComponent,
@@ -23,6 +24,7 @@ export function calculateScore(
   spot: TouristSpot,
   facilities: SupportFacility[],
   weather: WeatherInfo,
+  statuses: AdapterStatus[] = [],
 ): SafetyScore {
   const parts: ScoreComponent[] = [];
   const operation = [spot.openingHours, spot.holidays, spot.openNow];
@@ -123,7 +125,10 @@ export function calculateScore(
   });
   const coverage = parts.reduce((sum, p) => sum + p.knownWeight, 0);
   const earned = parts.reduce((sum, p) => sum + (p.earnedPoints ?? 0), 0);
-  const total = coverage ? Math.round((earned / coverage) * 100) : null;
+  // Missing evidence stays unknown; a failed provider must not improve a normalized score.
+  const degraded = statuses.some(status => status.status === 'ERROR' ||
+    (['medical', 'police', 'weather'].includes(status.key) && status.status === 'NOT_CONFIGURED'));
+  const total = !degraded && coverage ? Math.round((earned / coverage) * 100) : null;
   const hardFilter: string[] = [];
   if (spot.closure.status === "CONFIRMED" && spot.closure.value)
     hardFilter.push("공식 폐쇄 또는 출입통제 확인");
@@ -134,11 +139,13 @@ export function calculateScore(
   return {
     total,
     coverage,
-    confidence: coverage >= 90 ? "HIGH" : coverage >= 60 ? "MEDIUM" : "LOW",
+    confidence: degraded ? 'LOW' : coverage >= 90 ? "HIGH" : coverage >= 60 ? "MEDIUM" : "LOW",
     grade: hardFilter.length
       ? "HOLD"
       : total === null
         ? "UNKNOWN"
+        : spot.openNow.status === 'UNKNOWN' && spot.source.kind !== 'DEMO_DATA'
+          ? 'CHECK'
         : total >= 85
           ? "PRIORITY"
           : total >= 70

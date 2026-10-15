@@ -1,0 +1,42 @@
+TourSafe 실제 관광정보·지도 연동
+2026-10-11 / D:\tourSafe
+
+연결한 내용
+1. 숨길 프로젝트 .env의 SOOMGIL_TOUR_API_KEY를 읽어 TourSafe의 Git 제외 .env에 TOUR_API_KEY로 설정. 다른 로그인·메일 자격증명은 복사하지 않음. USE_MOCK_DATA=false.
+2. 한국관광공사 KorService2: locationBasedList2, detailCommon2, detailIntro2, searchKeyword2. 관광지·문화시설·레포츠 후보를 분리 조회하고 유효한 좌표/반경/중복을 검사하여 최대8곳 상세 조회.
+3. 숨길의 지도는 별도 Kakao 키가 아닌 Leaflet/OpenStreetMap이었다. 동일한 Leaflet1.9.4 및 OpenStreetMap 공용 타일을 실제 지도에 연결. 지도 출처 표시, 기본 HTTP 캐시, 화면에 필요한 타일만 요청. 별도 오프라인 타일 저장 없음.
+4. 첫 화면에 실제 장소 지도/경로 예시 보기를 분리. 실제 지도 마커·목록에서 장소 상세, 정보·운영시간·사진, 여행지 이름 검색이 연결됨. Kakao 길찾기 링크는 사용자 클릭 때 외부로 이동.
+5. 공개된 방문 정보가 적을 때 계산된 부분 점수를 과도하게 해석하지 않도록 확인율60% 미만은 정보 확인 필요로 표시. 운영 중단 등에 따른 추천 보류는 유지.
+
+실제 연동에서 해결한 문제
+- detailCommon2에 이전 버전의 defaultYN/firstImageYN/addrinfoYN/overviewYN/mapinfoYN 등이 남아 있어 HTTP200이지만 오류 본문이 반환되었음. 현재 요청 형식으로 수정.
+- detail 응답 파싱 실패가 전체 장소 조회를 실패시키던 문제를 상세별 실패 격리로 수정.
+- TourAPI의 최상위 resultCode 오류도 API 실패로 처리.
+- 목록 첫 페이지를 음식점/쇼핑이 채워 관광지가 줄어들던 문제를 제공기관 분류 필터로 해소.
+- 화면 크기 변경/숨김 후 지도 마커가 화면 밖으로 나가지 않도록 ResizeObserver에서 지도 크기와 범위 재조정.
+
+검증
+- npm test:99개 통과. 테스트 로그 tests.txt.
+- npm run build: frontend/backend TypeScript 및 Vite 성공. 지도 의존성 추가로 단일 JS 번들 약504kB(압축 전), Vite의500kB 크기 안내가 있음.
+- npm audit:0 vulnerabilities. 설치 과정에서 확인된 concurrently/shell-quote 취약 버전을 호환 범위에서 갱신함.
+- LIVE 관광정보:HTTP200, source PUBLIC_DATA, 성수 결과8곳, 소개/운영시간 확인, 사진7곳 제공·1곳 미제공. live-checks.json 참조.
+- 경복궁 이름 검색:HTTP200,13개 결과. 서울 경복궁 선택 후 기준점이 변경되고 주변 실제 장소8곳 표시됨.
+- 브라우저 실제 지도 타일6개 및 마커8개 로드. 마커→서울숲 곤충식물원 상세에서 실제 소개·주소·운영시간 확인.
+- 390px 모바일/1440px 데스크톱 확인, 데스크톱 마커8개 모두 지도 영역 안에 표시. 경로 예시 선택 시 실제 지도 숨김, 실제 지도 복귀 확인.
+- 브라우저 warn/error 로그 없음. 실제 전화/문자/위치 권한 요청은 실행하지 않음.
+- frontend/dist 전체 파일과 실제 API JSON에 TOUR_API_KEY 원문이 포함되지 않은 것을 검사함. .env는 git check-ignore에서 제외됨. 이 검사는 전체 보안 인증을 뜻하지 않음.
+
+남은 연결
+병·의원, 응급의료기관, 날씨, 경찰/관광안내소/화장실 등 별도 API는 이번에 키를 설정하지 않았다. 병원은 NOT_CONFIGURED, 나머지는 미확인으로 표시한다. CCTV·안심경로·범죄·사고 정보와 실시간 응급 수용 여부가 연결된 상태가 아니다.
+장소 이름 검색은 한국관광공사 등록 장소 검색이며 일반 주소 지오코딩을 제공하지 않는다.
+공용 OpenStreetMap 타일은 대량/오프라인 다운로드를 제공하지 않는다. 오프라인 지도는 허용하는 별도 공급자 검토가 필요하다.
+로컬 연결만 수행했으며 외부 배포·Git 커밋은 하지 않았다.
+
+캡처
+desktop-live-map.jpg / mobile-live-map.jpg / live-place-detail.jpg
+
+공식 자료
+https://www.data.go.kr/data/15101578/openapi.do
+https://apis.map.kakao.com/web/guide/
+https://leafletjs.com/reference.html
+https://operations.osmfoundation.org/policies/tiles/

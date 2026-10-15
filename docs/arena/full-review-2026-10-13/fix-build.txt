@@ -1,0 +1,21 @@
+
+> toursafe@0.1.0 build
+> tsc -p backend/tsconfig.json && tsc -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1637 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                 0.84 kB │ gzip:   0.54 kB
+dist/assets/maplibre-gl-worker-DhKPqT7d.js    506.24 kB
+dist/assets/TourSafeMapPanel-RZO-t2LB.css      83.13 kB │ gzip:  10.53 kB
+dist/assets/index-B9GKGR0W.css                128.48 kB │ gzip:  26.36 kB
+dist/assets/index-CpKS4Ha4.js                 350.95 kB │ gzip: 110.12 kB
+dist/assets/TourSafeMapPanel-ClSYIaeZ.js    1,060.27 kB │ gzip: 290.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.99s

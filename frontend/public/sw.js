@@ -1,5 +1,5 @@
 // Cache the shell only. Never cache live location, weather, or recommendation API responses.
-const CACHE = 'toursafe-shell-v2';
+const CACHE = 'toursafe-shell-v12';
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);

@@ -148,3 +148,29 @@ test("service key is encoded exactly once and API response shapes are checked", 
   );
   assert.throws(() => publicItems({ unexpected: [] }));
 });
+
+
+test('provider outage suppresses ranking without counting unknown evidence as zero', () => {
+  const item = demoRecommendations({ ...demoOrigin, radius: 3000, withKids: true })[0]!;
+  const score = calculateScore(item.spot, item.facilities.filter(f => f.type !== 'MEDICAL'), item.weather, [{ key:'medical', name:'의료', status:'ERROR', message:'조회 실패' }]);
+  assert.equal(score.total, null);
+  assert.equal(score.confidence, 'LOW');
+  assert.ok(!['PRIORITY','RECOMMENDED'].includes(score.grade));
+  assert.ok(score.components.find(c => c.key === 'medical')?.earnedPoints == null);
+});
+
+import { currentRecommendation, RECOMMENDATION_TTL } from '../../../frontend/src/utils/recommendationFreshness.js';
+test('a stale open detail never keeps a current operating assertion or a high score', () => {
+  const base = demoRecommendations({ ...demoOrigin, radius: 3000, withKids: true })[0]!;
+  const checkedAt='2026-10-13T01:00:00Z'; const now=Date.parse(checkedAt);
+  const item={...base,checkedAt,spot:{...base.spot,source:{...base.spot.source,kind:'PUBLIC_DATA' as const}}};
+  assert.equal(currentRecommendation(item,now),item);
+  const expired=currentRecommendation(item,now+RECOMMENDATION_TTL);
+  assert.equal(expired.spot.openNow.value,null); assert.equal(expired.score.total,null);
+  assert.notEqual(expired,item); assert.equal(item.checkedAt,checkedAt);
+});
+test('unconfirmed operation does not receive a priority recommendation for a live place', () => {
+  const base = demoRecommendations({ ...demoOrigin, radius:3000,withKids:true })[0]!;
+  const spot={...base.spot,source:{...base.spot.source,kind:'PUBLIC_DATA' as const},openNow:unknown<boolean>()};
+  assert.equal(calculateScore(spot,base.facilities,base.weather).grade,'CHECK');
+});

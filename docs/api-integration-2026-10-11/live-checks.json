@@ -1,0 +1,63 @@
+{
+  "apiStatus": 200,
+  "cacheControl": "no-store",
+  "mode": "LIVE",
+  "count": 8,
+  "tourStatus": "OK",
+  "publicSources": true,
+  "apiSecretLeak": false,
+  "places": [
+    {
+      "name": "서울숲 곤충식물원",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "더페이지갤러리",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "한강",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "응봉체육공원",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "서울 살곶이 다리",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "한양대학교 박물관",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    },
+    {
+      "name": "어린이꿈공원",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": false
+    },
+    {
+      "name": "수도박물관",
+      "description": true,
+      "openingHours": "CONFIRMED",
+      "hasImage": true
+    }
+  ],
+  "keywordStatus": 200,
+  "keywordResults": 13,
+  "keywordPreset": false,
+  "hospitalStatus": "NOT_CONFIGURED"
+}

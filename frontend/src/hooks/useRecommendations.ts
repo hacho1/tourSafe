@@ -9,6 +9,7 @@ export function useRecommendations(options: SearchOptions) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
+    setData(null);
     setError(null);
     searchPlaces(options, controller.signal)
       .then((result) => {
@@ -33,5 +34,14 @@ export function useRecommendations(options: SearchOptions) {
       });
     return () => controller.abort();
   }, [options.lat, options.lng, options.radius, options.withKids, retry]);
-  return { data, loading, error, refresh: () => setRetry((v) => v + 1) };
+  useEffect(() => {
+    if (!data || data.mode === 'DEMO') return;
+    const deadline = Date.parse(data.generatedAt) + 5 * 60_000;
+    const renew = () => { if (document.visibilityState === 'visible' && Date.now() >= deadline) { setData(null); setRetry(v => v + 1); } };
+    const timer = window.setTimeout(renew, Math.max(0, deadline - Date.now()));
+    document.addEventListener('visibilitychange', renew);
+    return () => { clearTimeout(timer); document.removeEventListener('visibilitychange', renew); };
+  }, [data]);
+  const current = data?.origin.lat === options.lat && data.origin.lng === options.lng && data.radiusMeters === options.radius ? data : null;
+  return { data: current, loading, error, refresh: () => setRetry((v) => v + 1) };
 }

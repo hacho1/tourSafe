@@ -1,0 +1,572 @@
+
+> toursafe@0.1.0 test
+> tsx --test backend/src/utils/core.test.ts backend/src/adapters/adapters.test.ts tests/shake.test.ts tests/nearby.test.ts tests/hospitals.test.ts tests/hospital-ui.test.ts tests/emergency.test.ts tests/search-location.test.ts tests/saved-places.test.ts tests/hospital-recovery.test.ts tests/modal-lock.test.ts
+
+TAP version 13
+# Subtest: medical adapter preserves unknown hours, rejects empty coordinates and labels straight distance
+ok 1 - medical adapter preserves unknown hours, rejects empty coordinates and labels straight distance
+  ---
+  duration_ms: 2.0397
+  type: 'test'
+  ...
+# Subtest: standard facilities keep provider revision and unknown phone
+ok 2 - standard facilities keep provider revision and unknown phone
+  ---
+  duration_ms: 0.9473
+  type: 'test'
+  ...
+# Subtest: upstream failure reduces available facts without invented values
+ok 3 - upstream failure reduces available facts without invented values
+  ---
+  duration_ms: 0.7911
+  type: 'test'
+  ...
+# Subtest: unconfigured adapter does not make any request
+ok 4 - unconfigured adapter does not make any request
+  ---
+  duration_ms: 1.7814
+  type: 'test'
+  ...
+# Subtest: all unknown produces no numerical score and zero coverage
+ok 5 - all unknown produces no numerical score and zero coverage
+  ---
+  duration_ms: 4.0459
+  type: 'test'
+  ...
+# Subtest: missing facts are excluded, not counted as failures
+ok 6 - missing facts are excluded, not counted as failures
+  ---
+  duration_ms: 0.7225
+  type: 'test'
+  ...
+# Subtest: closure and severe alerts override even a perfect score
+ok 7 - closure and severe alerts override even a perfect score
+  ---
+  duration_ms: 0.5893
+  type: 'test'
+  ...
+# Subtest: confirmed closed hours prevent a recommendation
+ok 8 - confirmed closed hours prevent a recommendation
+  ---
+  duration_ms: 0.3507
+  type: 'test'
+  ...
+# Subtest: demo respects radius and does not relocate fixtures to arbitrary cities
+ok 9 - demo respects radius and does not relocate fixtures to arbitrary cities
+  ---
+  duration_ms: 0.7022
+  type: 'test'
+  ...
+# Subtest: recommendation order puts sparse evidence after sufficiently documented candidates
+ok 10 - recommendation order puts sparse evidence after sufficiently documented candidates
+  ---
+  duration_ms: 0.398
+  type: 'test'
+  ...
+# Subtest: geodesic distance and KMA Seoul grid
+ok 11 - geodesic distance and KMA Seoul grid
+  ---
+  duration_ms: 3.78
+  type: 'test'
+  ...
+# Subtest: KST weather base crosses the date boundary correctly
+ok 12 - KST weather base crosses the date boundary correctly
+  ---
+  duration_ms: 4.3619
+  type: 'test'
+  ...
+# Subtest: unambiguous schedules only; holiday exceptions stay unknown
+ok 13 - unambiguous schedules only; holiday exceptions stay unknown
+  ---
+  duration_ms: 0.9991
+  type: 'test'
+  ...
+# Subtest: service key is encoded exactly once and API response shapes are checked
+ok 14 - service key is encoded exactly once and API response shapes are checked
+  ---
+  duration_ms: 1.4954
+  type: 'test'
+  ...
+# (node:20700) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: freshness accepts coordinate and time boundaries without accepting stale or future positions
+ok 15 - freshness accepts coordinate and time boundaries without accepting stale or future positions
+  ---
+  duration_ms: 2.4775
+  type: 'test'
+  ...
+# Subtest: location text includes rounded coordinates, approximate accuracy, and the capture clock
+ok 16 - location text includes rounded coordinates, approximate accuracy, and the capture clock
+  ---
+  duration_ms: 49.9917
+  type: 'test'
+  ...
+# Subtest: message trims a manual landmark and includes only a fresh GPS reading
+ok 17 - message trims a manual landmark and includes only a fresh GPS reading
+  ---
+  duration_ms: 0.9603
+  type: 'test'
+  ...
+# Subtest: empty, invalid, or stale location has no invented coordinates or demo landmark
+ok 18 - empty, invalid, or stale location has no invented coordinates or demo landmark
+  ---
+  duration_ms: 1.0325
+  type: 'test'
+  ...
+# Subtest: one-shot request uses uncached high accuracy and returns the browser capture timestamp
+ok 19 - one-shot request uses uncached high accuracy and returns the browser capture timestamp
+  ---
+  duration_ms: 7.0507
+  type: 'test'
+  ...
+# Subtest: cancellation clears its watchdog and ignores late success and error callbacks
+ok 20 - cancellation clears its watchdog and ignores late success and error callbacks
+  ---
+  duration_ms: 2.0086
+  type: 'test'
+  ...
+# Subtest: successful completion clears its watchdog and ignores all duplicate callbacks
+ok 21 - successful completion clears its watchdog and ignores all duplicate callbacks
+  ---
+  duration_ms: 0.6255
+  type: 'test'
+  ...
+# Subtest: stale, invalid, and future browser readings fail without later callbacks replacing the result
+ok 22 - stale, invalid, and future browser readings fail without later callbacks replacing the result
+  ---
+  duration_ms: 1.196
+  type: 'test'
+  ...
+# Subtest: freshness is checked when the reading arrives, using the supplied clock
+ok 23 - freshness is checked when the reading arrives, using the supplied clock
+  ---
+  duration_ms: 0.7335
+  type: 'test'
+  ...
+# Subtest: permission, unavailable, timeout, and unknown browser failures offer manual fallback once
+ok 24 - permission, unavailable, timeout, and unknown browser failures offer manual fallback once
+  ---
+  duration_ms: 1.0968
+  type: 'test'
+  ...
+# Subtest: a browser that leaves its permission prompt pending is bounded by the watchdog
+ok 25 - a browser that leaves its permission prompt pending is bounded by the watchdog
+  ---
+  duration_ms: 0.7158
+  type: 'test'
+  ...
+# Subtest: unsupported geolocation and synchronous browser exceptions are actionable and cancellable
+ok 26 - unsupported geolocation and synchronous browser exceptions are actionable and cancellable
+  ---
+  duration_ms: 0.5988
+  type: 'test'
+  ...
+# Subtest: synchronous browser success settles normally and clears the watchdog
+ok 27 - synchronous browser success settles normally and clears the watchdog
+  ---
+  duration_ms: 0.6507
+  type: 'test'
+  ...
+# Subtest: hospital fetch preserves the requested region, no-store policy, signal and successful response
+ok 28 - hospital fetch preserves the requested region, no-store policy, signal and successful response
+  ---
+  duration_ms: 41.3578
+  type: 'test'
+  ...
+# Subtest: only a fetch TypeError is described as a network failure
+ok 29 - only a fetch TypeError is described as a network failure
+  ---
+  duration_ms: 2.1778
+  type: 'test'
+  ...
+# Subtest: timeouts during a request and while reading its body have a distinct recovery message
+ok 30 - timeouts during a request and while reading its body have a distinct recovery message
+  ---
+  duration_ms: 2.0412
+  type: 'test'
+  ...
+# Subtest: non-OK HTTP responses distinguish upstream, access and other service errors without reading raw bodies
+ok 31 - non-OK HTTP responses distinguish upstream, access and other service errors without reading raw bodies
+  ---
+  duration_ms: 5.8623
+  type: 'test'
+  ...
+# Subtest: malformed JSON and body-read failures are response errors rather than network errors
+ok 32 - malformed JSON and body-read failures are response errors rather than network errors
+  ---
+  duration_ms: 3.9024
+  type: 'test'
+  ...
+# Subtest: user cancellation remains cancellation rather than becoming a connectivity or timeout error
+ok 33 - user cancellation remains cancellation rather than becoming a connectivity or timeout error
+  ---
+  duration_ms: 0.8311
+  type: 'test'
+  ...
+# Subtest: display messages remain safe even if a typed error message is changed
+ok 34 - display messages remain safe even if a typed error message is changed
+  ---
+  duration_ms: 0.4193
+  type: 'test'
+  ...
+# Subtest: missing, partial, invalid and ambiguous zero hours are unknown rather than a closed-day claim
+ok 35 - missing, partial, invalid and ambiguous zero hours are unknown rather than a closed-day claim
+  ---
+  duration_ms: 1.5964
+  type: 'test'
+  ...
+# Subtest: overnight hours explicitly label next-day closing without claiming current availability
+ok 36 - overnight hours explicitly label next-day closing without claiming current availability
+  ---
+  duration_ms: 0.2745
+  type: 'test'
+  ...
+# Subtest: department choices derive from received hospitals and unknown information stays separately filterable
+ok 37 - department choices derive from received hospitals and unknown information stays separately filterable
+  ---
+  duration_ms: 29.6531
+  type: 'test'
+  ...
+# Subtest: the default weekday follows Korean midnight rather than the host timezone
+ok 38 - the default weekday follows Korean midnight rather than the host timezone
+  ---
+  duration_ms: 0.3391
+  type: 'test'
+  ...
+# Subtest: a refreshed list that loses the chosen department shows the all option and all results together
+ok 39 - a refreshed list that loses the chosen department shows the all option and all results together
+  ---
+  duration_ms: 0.3921
+  type: 'test'
+  ...
+# Subtest: demo and non-public sources cannot place calls or launch maps, and unsafe telephone text is rejected
+ok 40 - demo and non-public sources cannot place calls or launch maps, and unsafe telephone text is rejected
+  ---
+  duration_ms: 0.9312
+  type: 'test'
+  ...
+# Subtest: responses from a prior region, wrong coordinates or mixed demo source are withheld
+ok 41 - responses from a prior region, wrong coordinates or mixed demo source are withheld
+  ---
+  duration_ms: 0.9866
+  type: 'test'
+  ...
+# Subtest: missing publication dates stay unknown and date-only data does not invent an observation time
+ok 42 - missing publication dates stay unknown and date-only data does not invent an observation time
+  ---
+  duration_ms: 24.183
+  type: 'test'
+  ...
+# Subtest: hospital HHmm parsing preserves midnight and accepts 2400 only as closing
+ok 43 - hospital HHmm parsing preserves midnight and accepts 2400 only as closing
+  ---
+  duration_ms: 2.1924
+  type: 'test'
+  ...
+# Subtest: missing or invalid hour pairs remain unknown, never closed or inferred 24-hour service
+ok 44 - missing or invalid hour pairs remain unknown, never closed or inferred 24-hour service
+  ---
+  duration_ms: 2.4069
+  type: 'test'
+  ...
+# Subtest: departments use only listed names and supported separators with placeholders removed
+ok 45 - departments use only listed names and supported separators with placeholders removed
+  ---
+  duration_ms: 1.9554
+  type: 'test'
+  ...
+# Subtest: list normalization rejects invalid coordinates or identity, deduplicates HPID and sorts by fixed origin
+ok 46 - list normalization rejects invalid coordinates or identity, deduplicates HPID and sorts by fixed origin
+  ---
+  duration_ms: 1.6541
+  type: 'test'
+  ...
+# Subtest: detail normalization requires matching HPID and the documented dgidIdName field
+ok 47 - detail normalization requires matching HPID and the documented dgidIdName field
+  ---
+  duration_ms: 1.3554
+  type: 'test'
+  ...
+# Subtest: list requests official region parameters, ten-minute cache and no more than 300 rows
+ok 48 - list requests official region parameters, ten-minute cache and no more than 300 rows
+  ---
+  duration_ms: 8.6054
+  type: 'test'
+  ...
+# Subtest: unknown totals, dropped invalid rows and duplicate pagination are marked partial
+ok 49 - unknown totals, dropped invalid rows and duplicate pagination are marked partial
+  ---
+  duration_ms: 24.0061
+  type: 'test'
+  ...
+# Subtest: detail requests HPID and sixty-minute cache; empty and unrelated records fail
+ok 50 - detail requests HPID and sixty-minute cache; empty and unrelated records fail
+  ---
+  duration_ms: 3.692
+  type: 'test'
+  ...
+# Subtest: demo is fictional Seongsu only; unconfigured live data does not appear as an empty success
+ok 51 - demo is fictional Seongsu only; unconfigured live data does not appear as an empty success
+  ---
+  duration_ms: 3.9744
+  type: 'test'
+  ...
+# Subtest: configured list failure and total detail failure propagate, even when mock mode is enabled
+ok 52 - configured list failure and total detail failure propagate, even when mock mode is enabled
+  ---
+  duration_ms: 1.5859
+  type: 'test'
+  ...
+# Subtest: partial detail failure preserves list identity but never borrows another hospital's hours
+ok 53 - partial detail failure preserves list identity but never borrows another hospital's hours
+  ---
+  duration_ms: 0.8736
+  type: 'test'
+  ...
+# Subtest: only nearest twelve get detail enrichment, at most four at a time, preserving sorted output
+ok 54 - only nearest twelve get detail enrichment, at most four at a time, preserving sorted output
+  ---
+  duration_ms: 35.2355
+  type: 'test'
+  ...
+# Subtest: successful empty and wholly unusable lists remain distinguishable without requesting details
+ok 55 - successful empty and wholly unusable lists remain distinguishable without requesting details
+  ---
+  duration_ms: 1.0431
+  type: 'test'
+  ...
+# Subtest: semantic detail failures evict successful HTTP cache entries so retry fetches upstream again
+ok 56 - semantic detail failures evict successful HTTP cache entries so retry fetches upstream again
+  ---
+  duration_ms: 65.1625
+  type: 'test'
+  ...
+# Subtest: malformed or wholly unusable list responses are not retained in the HTTP cache
+ok 57 - malformed or wholly unusable list responses are not retained in the HTTP cache
+  ---
+  duration_ms: 7.5993
+  type: 'test'
+  ...
+# Subtest: nested SOS keeps scrolling locked even if the underlying dialog closes first
+ok 58 - nested SOS keeps scrolling locked even if the underlying dialog closes first
+  ---
+  duration_ms: 1.6545
+  type: 'test'
+  ...
+# Subtest: selects the nearest in-radius place rather than score order, without mutating the response
+ok 59 - selects the nearest in-radius place rather than score order, without mutating the response
+  ---
+  duration_ms: 6.2619
+  type: 'test'
+  ...
+# Subtest: demo is available only at the default origin, including when GPS fixes to exactly that location
+ok 60 - demo is available only at the default origin, including when GPS fixes to exactly that location
+  ---
+  duration_ms: 1.3314
+  type: 'test'
+  ...
+# Subtest: a response for old coordinates or a different radius is never displayed under a new request
+ok 61 - a response for old coordinates or a different radius is never displayed under a new request
+  ---
+  duration_ms: 1.9187
+  type: 'test'
+  ...
+# Subtest: LIVE hides a response containing demo sources anywhere, including evidence and nonselected places
+ok 62 - LIVE hides a response containing demo sources anywhere, including evidence and nonselected places
+  ---
+  duration_ms: 6.6574
+  type: 'test'
+  ...
+# Subtest: failed or unconfigured adapters cannot masquerade as successful empty search or absent facilities
+ok 63 - failed or unconfigured adapters cannot masquerade as successful empty search or absent facilities
+  ---
+  duration_ms: 1.4576
+  type: 'test'
+  ...
+# Subtest: unknown, verified absence and confirmed negative evidence retain different meanings
+ok 64 - unknown, verified absence and confirmed negative evidence retain different meanings
+  ---
+  duration_ms: 0.3578
+  type: 'test'
+  ...
+# Subtest: cancelled, superseded and unmounted requests cannot apply late location or search callbacks
+ok 65 - cancelled, superseded and unmounted requests cannot apply late location or search callbacks
+  ---
+  duration_ms: 0.6657
+  type: 'test'
+  ...
+# Subtest: saving and deleting publish only persisted IDs to all same-tab consumers
+ok 66 - saving and deleting publish only persisted IDs to all same-tab consumers
+  ---
+  duration_ms: 3.9288
+  type: 'test'
+  ...
+# Subtest: quota failures preserve previous visible and persisted IDs for both save and delete
+ok 67 - quota failures preserve previous visible and persisted IDs for both save and delete
+  ---
+  duration_ms: 0.765
+  type: 'test'
+  ...
+# Subtest: missing storage starts empty but unavailable or throwing storage reports a Korean read error
+ok 68 - missing storage starts empty but unavailable or throwing storage reports a Korean read error
+  ---
+  duration_ms: 0.8032
+  type: 'test'
+  ...
+# Subtest: malformed saved data is reported and never overwritten by a toggle
+ok 69 - malformed saved data is reported and never overwritten by a toggle
+  ---
+  duration_ms: 1.1603
+  type: 'test'
+  ...
+# Subtest: a later read failure retains the last confirmed IDs and prevents data loss
+ok 70 - a later read failure retains the last confirmed IDs and prevents data loss
+  ---
+  duration_ms: 0.6679
+  type: 'test'
+  ...
+# Subtest: loads are bounded to 100 distinct IDs and a new save keeps the latest 100 IDs
+ok 71 - loads are bounded to 100 distinct IDs and a new save keeps the latest 100 IDs
+  ---
+  duration_ms: 0.8599
+  type: 'test'
+  ...
+# Subtest: storage changes synchronize cross-tab, ignore unrelated areas, and clean up listeners
+ok 72 - storage changes synchronize cross-tab, ignore unrelated areas, and clean up listeners
+  ---
+  duration_ms: 1.0228
+  type: 'test'
+  ...
+# Subtest: snapshot reads are stable and effect resubscription performs no writes
+ok 73 - snapshot reads are stable and effect resubscription performs no writes
+  ---
+  duration_ms: 0.3677
+  type: 'test'
+  ...
+# Subtest: writes merge a missed cross-tab update and serialize bookmark IDs without place details or GPS
+ok 74 - writes merge a missed cross-tab update and serialize bookmark IDs without place details or GPS
+  ---
+  duration_ms: 0.6728
+  type: 'test'
+  ...
+# (node:29896) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: GPS readings require finite Korea coordinates, accuracy, and a recent capture time
+ok 75 - GPS readings require finite Korea coordinates, accuracy, and a recent capture time
+  ---
+  duration_ms: 2.5094
+  type: 'test'
+  ...
+# Subtest: successful GPS selection carries the captured KST date and time instead of claiming a live position
+ok 76 - successful GPS selection carries the captured KST date and time instead of claiming a live position
+  ---
+  duration_ms: 38.7355
+  type: 'test'
+  ...
+# Subtest: manual selection during GPS keeps the chosen region despite late success, failure, and timeout
+ok 77 - manual selection during GPS keeps the chosen region despite late success, failure, and timeout
+  ---
+  duration_ms: 0.6362
+  type: 'test'
+  ...
+# Subtest: cancelling a dismissed screen is idempotent and clears its watchdog
+ok 78 - cancelling a dismissed screen is idempotent and clears its watchdog
+  ---
+  duration_ms: 1.3354
+  type: 'test'
+  ...
+# Subtest: a newer request supersedes the first even if old callbacks and an old cancel handle arrive later
+ok 79 - a newer request supersedes the first even if old callbacks and an old cancel handle arrive later
+  ---
+  duration_ms: 1.41
+  type: 'test'
+  ...
+# Subtest: invalid or stale GPS never overwrites an existing manually selected region
+ok 80 - invalid or stale GPS never overwrites an existing manually selected region
+  ---
+  duration_ms: 1.7843
+  type: 'test'
+  ...
+# Subtest: freshness is evaluated on callback arrival rather than request start
+ok 81 - freshness is evaluated on callback arrival rather than request start
+  ---
+  duration_ms: 0.4753
+  type: 'test'
+  ...
+# Subtest: unanswered permission prompts time out independently and cannot subsequently select a position
+ok 82 - unanswered permission prompts time out independently and cannot subsequently select a position
+  ---
+  duration_ms: 0.7599
+  type: 'test'
+  ...
+# Subtest: browser failures preserve manual selection and allow a subsequent request
+ok 83 - browser failures preserve manual selection and allow a subsequent request
+  ---
+  duration_ms: 3.377
+  type: 'test'
+  ...
+# Subtest: unsupported and synchronously failing browsers settle once without blocking the next request
+ok 84 - unsupported and synchronously failing browsers settle once without blocking the next request
+  ---
+  duration_ms: 3.6258
+  type: 'test'
+  ...
+# Subtest: synchronous success does not leave an active watchdog or a stale cancellation handle
+ok 85 - synchronous success does not leave an active watchdog or a stale cancellation handle
+  ---
+  duration_ms: 1.5588
+  type: 'test'
+  ...
+# (node:11228) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: stationary readings, gentle movement and a single bump do not trigger
+ok 86 - stationary readings, gentle movement and a single bump do not trigger
+  ---
+  duration_ms: 2.4964
+  type: 'test'
+  ...
+# Subtest: three distinct impulses trigger once, then respect the cooldown
+ok 87 - three distinct impulses trigger once, then respect the cooldown
+  ---
+  duration_ms: 0.3871
+  type: 'test'
+  ...
+# Subtest: missing axes and stale motion samples do not invent a gesture
+ok 88 - missing axes and stale motion samples do not invent a gesture
+  ---
+  duration_ms: 0.2808
+  type: 'test'
+  ...
+# Subtest: closing a modal or returning to the tab cannot bypass the shake cooldown
+ok 89 - closing a modal or returning to the tab cannot bypass the shake cooldown
+  ---
+  duration_ms: 0.4595
+  type: 'test'
+  ...
+# Subtest: modal and hidden-tab samples cannot complete a partly detected gesture
+ok 90 - modal and hidden-tab samples cannot complete a partly detected gesture
+  ---
+  duration_ms: 0.2043
+  type: 'test'
+  ...
+# Subtest: sensor availability waits only while the page is visible and resumes its remaining time
+ok 91 - sensor availability waits only while the page is visible and resumes its remaining time
+  ---
+  duration_ms: 1.5119
+  type: 'test'
+  ...
+# Subtest: a usable sensor reading or hook cleanup permanently cancels the availability warning
+ok 92 - a usable sensor reading or hook cleanup permanently cancels the availability warning
+  ---
+  duration_ms: 0.5509
+  type: 'test'
+  ...
+1..92
+# tests 92
+# suites 0
+# pass 92
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1602.1658

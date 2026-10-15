@@ -14,6 +14,7 @@ import type { Recommendation } from "../../../shared/models";
 import { CONFIDENCE } from "../config/constants";
 import { distance } from "../utils/format";
 import { ScoreBadge } from "./ScoreBadge";
+import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 export function SpotImage({
   src,
   name,
@@ -53,7 +54,7 @@ export function SpotCard({
   onOpen: () => void;
   index: number;
 }) {
-  const { spot, score, weather, facilities } = item;
+  const { spot, score, weather, facilities } = useCurrentRecommendation(item);
   const demo = spot.source.kind === "DEMO_DATA";
   return (
     <article
@@ -112,9 +113,9 @@ export function SpotCard({
                 <CircleHelp size={14} />
               )}
               {spot.openNow.value === true
-                ? "운영시간 기준 이용 가능"
+                ? "조회 당시 등록 운영시간 내"
                 : spot.openNow.value === false
-                  ? "현재 운영시간 외"
+                  ? "조회 당시 등록 운영시간 외"
                   : "운영 여부 확인 필요"}
             </span>
             <span>

@@ -11,6 +11,7 @@ export const config = {
     "https://apis.data.go.kr/B551011/KorService2",
   weatherKey: process.env.WEATHER_API_KEY || "",
   medicalKey: process.env.MEDICAL_API_KEY || "",
+  hospitalKey: process.env.HOSPITAL_API_KEY || "",
   touristInfoKey: process.env.TOURIST_INFO_API_KEY || "",
   toiletKey: process.env.TOILET_API_KEY || "",
   kakaoKey: process.env.KAKAO_REST_API_KEY || "",

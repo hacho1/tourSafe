@@ -1,6 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
 import { list, record, str } from "./data.js";
 const cache = new Map<string, { expires: number; promise: Promise<unknown> }>();
+// Adapter-level validation can reject a syntactically successful upstream reply.
+export function invalidateFetchCache(url: string): void {
+  cache.delete(url + JSON.stringify({}));
+}
 export function buildUrl(
   base: string,
   params: Record<string, string | number>,
@@ -41,7 +45,7 @@ export async function fetchData(
     const root = record(data),
       wrapper = record(root.response);
     const header = record(wrapper.header);
-    const code = str(header.resultCode);
+    const code = str(header.resultCode ?? root.resultCode);
     if (
       (code && !["00", "0000", "0", "NORMAL_SERVICE"].includes(code)) ||
       root.OpenAPI_ServiceResponse

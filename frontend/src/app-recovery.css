@@ -1,0 +1,26 @@
+.app-page[hidden] { display:none !important; }
+.app-mobile-nav button { color:#63796b; }
+.modal .modal-top { gap:8px; }
+.modal .modal-title { flex:1; min-width:0; }
+.modal .modal-emergency { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex-shrink:0; min-height:44px; padding:0 10px; border:1px solid #ecd4d0; border-radius:9px; background:#fff8f6; color:#933e33; font-size:12px; font-weight:700; }
+.saved-feedback { display:flex; align-items:flex-start; gap:9px; margin:12px 0; padding:12px 14px; border:1px solid #ead5be; border-radius:10px; background:#fff8ec; color:#785027; font-size:13px; line-height:1.65; }
+.saved-feedback p { flex:1; }
+.saved-feedback>svg { flex-shrink:0; margin-top:4px; }
+.saved-feedback button { flex-shrink:0; display:grid; place-items:center; min-height:44px; min-width:44px; margin:-6px; color:#785027; }
+.page-feedback { position:fixed; left:16px; right:16px; bottom:80px; z-index:45; max-width:560px; margin:0 auto; pointer-events:none; }
+.page-feedback .saved-feedback { pointer-events:auto; box-shadow:0 8px 30px #20372a20; }
+.modal>.saved-feedback { margin:8px 12px; flex-shrink:0; max-height:28dvh; overflow:auto; }
+.saved-scope { margin:12px 0 18px; padding:13px 16px; border:1px solid #d9e5db; background:#f1f6f0; border-radius:10px; font-size:13px; line-height:1.75; color:#496552; }
+.saved-scope p+p { margin-top:4px; }
+.saved-scope button { min-height:44px; color:#176b53; text-decoration:underline; text-underline-offset:3px; }
+.detail-bottom .emergency-link { display:flex; align-items:center; gap:8px; text-align:left; }
+.detail-bottom .emergency-link span { display:flex; flex-direction:column; }
+.detail-bottom .emergency-link strong { font-size:16px; }
+@media(min-width:901px) { .page-feedback { bottom:20px; } }
+@media(max-width:900px) {
+  .app-mobile-nav { position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:space-around; align-items:center; height:calc(65px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); background:#fff; border-top:1px solid #e3e9df; z-index:15; }
+  .app-mobile-nav button { display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; min-width:64px; min-height:52px; font-size:11px; }
+  .app-mobile-nav button.active { color:#176b53; font-weight:700; }
+  .app-page .sm-desktop-nav, .app-page .desktop-nav { display:none; }
+  .app-page .sm-main, .app-page .page-shell { padding-bottom:100px; }
+}

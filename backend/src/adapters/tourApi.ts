@@ -1,5 +1,6 @@
 import type {
   Evidence,
+  Region,
   SearchOptions,
   TouristSpot,
 } from "../../../shared/models.js";
@@ -30,6 +31,24 @@ const common = () => ({
   pageNo: 1,
   numOfRows: 30,
 });
+/** Resolve a bookmark by content ID, independently of a nearby search's eight-result cap. */
+export async function getTouristIdentity(id: string, request: typeof fetchData = fetchData) {
+  if (!/^\d{1,16}$/.test(id) || !config.tourKey) throw new Error('PLACE_UNAVAILABLE');
+  const item = publicItems(await request(buildUrl(`${config.tourBase}/detailCommon2`, { ...common(), contentId: id })))[0];
+  const lat = num(item?.mapy), lng = num(item?.mapx), name = plain(item?.title);
+  if (!item || str(item.contentid) !== id || !name || !validCoordinates(lat, lng) || lng === null) throw new Error('PLACE_UNAVAILABLE');
+  return { id, name, lat, lng, address: plain(item.addr1), phone: plain(item.tel), source };
+}
+export async function findTourRegions(query: string, request: typeof fetchData = fetchData): Promise<Region[]> {
+  const rows = publicItems(await request(buildUrl(`${config.tourBase}/searchKeyword2`, {
+    ...common(), keyword: query, numOfRows: 20, arrange: "A",
+  })));
+  return rows.flatMap(item => {
+    const lat = num(item.mapy), lng = num(item.mapx), name = plain(item.title);
+    if (!name || !validCoordinates(lat, lng) || lng === null) return [];
+    return [{ name, address: plain(item.addr1) || "한국관광공사 장소", lat, lng }];
+  });
+}
 export function parseOpenNow(
   hours: string | null,
   holidays: string | null,
@@ -68,21 +87,24 @@ export function parseOpenNow(
 }
 export async function getTouristSpots(
   options: SearchOptions,
+  request: typeof fetchData = fetchData,
 ): Promise<TouristSpot[]> {
-  const data = await fetchData(
+  // Filter at the provider: nearby restaurants/shops must not exhaust the first page.
+  const lists = await Promise.all(["12", "14", "28"].map(async contentTypeId => publicItems(await request(
     buildUrl(`${config.tourBase}/locationBasedList2`, {
-      ...common(),
-      mapX: options.lng,
-      mapY: options.lat,
-      radius: options.radius,
-      arrange: "E",
+      ...common(), numOfRows: 8, contentTypeId,
+      mapX: options.lng, mapY: options.lat, radius: options.radius, arrange: "E",
     }),
-  );
-  const candidates = publicItems(data)
-    .filter((item) =>
-      ["12", "14", "28"].includes(str(item.contenttypeid) || ""),
-    )
-    .slice(0, 8);
+  ))));
+  const unique = new Map<string, Record<string, unknown>>();
+  for (const item of lists.flat()) {
+    const id = str(item.contentid), lat = num(item.mapy), lng = num(item.mapx);
+    if (!id || !plain(item.title) || !["12", "14", "28"].includes(str(item.contenttypeid) || "") || !validCoordinates(lat, lng) || lng === null) continue;
+    if (haversine(options, { lat, lng }) <= options.radius && !unique.has(id)) unique.set(id, item);
+  }
+  const candidates = [...unique.values()].sort((a, b) =>
+    haversine(options, { lat: num(a.mapy)!, lng: num(a.mapx)! }) - haversine(options, { lat: num(b.mapy)!, lng: num(b.mapx)! }),
+  ).slice(0, 8);
   const results = await Promise.all(
     candidates.map(async (item): Promise<TouristSpot | null> => {
       const lat = num(item.mapy),
@@ -94,22 +116,17 @@ export async function getTouristSpots(
       const type = str(item.contenttypeid)!;
       const detailParams = { ...common(), contentId: id, contentTypeId: type };
       const [detail, intro] = await Promise.allSettled([
-        fetchData(
+        request(
           buildUrl(`${config.tourBase}/detailCommon2`, {
-            ...detailParams,
-            defaultYN: "Y",
-            firstImageYN: "Y",
-            addrinfoYN: "Y",
-            overviewYN: "Y",
-            mapinfoYN: "Y",
+            ...common(), contentId: id,
           }),
-        ),
-        fetchData(buildUrl(`${config.tourBase}/detailIntro2`, detailParams)),
+        ).then(value => publicItems(value)[0] || {}),
+        request(buildUrl(`${config.tourBase}/detailIntro2`, detailParams)).then(value => publicItems(value)[0] || {}),
       ]);
       const d =
-        detail.status === "fulfilled" ? publicItems(detail.value)[0] || {} : {};
+        detail.status === "fulfilled" ? detail.value : {};
       const i =
-        intro.status === "fulfilled" ? publicItems(intro.value)[0] || {} : {};
+        intro.status === "fulfilled" ? intro.value : {};
       const updatedAt = isoDate(d.modifiedtime ?? item.modifiedtime);
       const hours = plain(i.usetime ?? i.usetimeculture ?? i.usetimeleports);
       const holidays = plain(

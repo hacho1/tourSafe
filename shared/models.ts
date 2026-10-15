@@ -92,6 +92,7 @@ export interface AdapterStatus {
   message: string;
 }
 export interface Recommendation {
+  checkedAt?: string;
   spot: TouristSpot;
   facilities: SupportFacility[];
   weather: WeatherInfo;

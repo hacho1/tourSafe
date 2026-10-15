@@ -1,25 +1,33 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { Siren, X } from "lucide-react";
+import { useEmergency } from "./EmergencyContext";
+import { SavedFeedback } from "./SavedFeedback";
+import { createModalScrollLock } from "../utils/modalLock";
+
+let acquireScrollLock: (() => () => void) | undefined;
 export function Modal({
   title,
   children,
   onClose,
   className = "",
+  hideEmergency = false,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   className?: string;
+  hideEmergency?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const openEmergency = useEmergency();
   useEffect(() => {
     const dialog = ref.current!;
     dialog.showModal();
-    const old = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    acquireScrollLock ??= createModalScrollLock(document.body.style);
+    const release = acquireScrollLock();
     return () => {
       dialog.close();
-      document.body.style.overflow = old;
+      release();
     };
   }, []);
   return (
@@ -45,7 +53,8 @@ export function Modal({
       }}
     >
       <div className="modal-top">
-        <span>{title}</span>
+        <span className="modal-title" tabIndex={-1}>{title}</span>
+        {!hideEmergency && openEmergency && <button type="button" className="modal-emergency" onClick={openEmergency} aria-label="도움 열기"><Siren size={16} aria-hidden="true" />도움</button>}
         <button
           type="button"
           className="icon-button"
@@ -55,6 +64,7 @@ export function Modal({
           <X size={21} />
         </button>
       </div>
+      {!hideEmergency && <SavedFeedback />}
       {children}
     </dialog>
   );

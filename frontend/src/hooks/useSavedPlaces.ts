@@ -1,28 +1,18 @@
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
+import { createSavedPlacesStore, type SavedPlacesSnapshot } from "../utils/savedPlaces";
+
+const serverSnapshot: SavedPlacesSnapshot = { ids: [], error: "" };
+const store = createSavedPlacesStore(
+  () => (typeof window === "undefined" ? null : window.localStorage),
+  (listener) => {
+    if (typeof window === "undefined") return () => {};
+    const onStorage = (event: StorageEvent) => listener(event);
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  },
+);
+
 export function useSavedPlaces() {
-  const [ids, setIds] = useState<string[]>(() => {
-    try {
-      const saved: unknown = JSON.parse(
-        localStorage.getItem("toursafe-saved") || "[]",
-      );
-      return Array.isArray(saved)
-        ? saved.filter((v): v is string => typeof v === "string").slice(0, 100)
-        : [];
-    } catch {
-      return [];
-    }
-  });
-  const toggle = (id: string) =>
-    setIds((old) => {
-      const next = old.includes(id)
-        ? old.filter((x) => x !== id)
-        : [...old, id].slice(-100);
-      try {
-        localStorage.setItem("toursafe-saved", JSON.stringify(next));
-      } catch {
-        /* Session state still works if storage is unavailable. */
-      }
-      return next;
-    });
-  return { ids, toggle };
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, () => serverSnapshot);
+  return { ...snapshot, toggle: store.toggle, clearError: store.clearError };
 }

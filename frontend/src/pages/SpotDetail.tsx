@@ -24,12 +24,14 @@ import {
 } from "lucide-react";
 import type { Recommendation, SupportFacility } from "../../../shared/models";
 import { Modal } from "../components/Modal";
+import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
+import { useEmergency } from "../components/EmergencyContext";
 import { SpotImage } from "../components/SpotCard";
 import { MapPanel, type MapPoint } from "../components/MapPanel";
 import {
   CONFIDENCE,
   FACILITY_LABEL,
-  GRADE,
+  scoreSummary,
   SAFETY_LABEL,
 } from "../config/constants";
 import {
@@ -48,14 +50,18 @@ export function SpotDetail({
   saved,
   onSave,
   onClose,
+  initialTab = "safety",
 }: {
   item: Recommendation;
   saved: boolean;
   onSave: () => void;
   onClose: () => void;
+  initialTab?: Tab;
 }) {
-  const { spot, score, weather, facilities, statuses } = item;
-  const [tab, setTab] = useState<Tab>("safety"),
+  const { spot, score, weather, facilities, statuses } = useCurrentRecommendation(item);
+  const summary = scoreSummary(score);
+  const openEmergency = useEmergency();
+  const [tab, setTab] = useState<Tab>(initialTab),
     [selected, setSelected] = useState(spot.id);
   const demo = spot.source.kind === "DEMO_DATA",
     call = phoneLink(spot.phone);
@@ -124,7 +130,7 @@ export function SpotDetail({
             className={`grade-pill ${score.grade === "HOLD" ? "hold" : ""}`}
           >
             <ShieldCheck size={16} />
-            {GRADE[score.grade]}
+            {summary.label}
           </span>
         </div>
         <div className="detail-tabs" role="tablist" aria-label="관광지 정보">
@@ -257,17 +263,17 @@ export function SpotDetail({
                 <div
                   className="score-ring"
                   style={
-                    { "--score": `${score.total ?? 0}%` } as React.CSSProperties
+                    { "--score": `${summary.total ?? 0}%` } as React.CSSProperties
                   }
                 >
                   <div>
-                    <strong>{score.total ?? "—"}</strong>
+                    <strong>{summary.total ?? "—"}</strong>
                     <span>/ 100</span>
                   </div>
                 </div>
                 <div>
                   <span className="eyebrow">TOURSAFE 방문 조건 점수</span>
-                  <h3>{GRADE[score.grade]}</h3>
+                  <h3>{summary.label}</h3>
                   <p>현재 확인 가능한 정보 기준</p>
                   <span
                     className={`confidence ${score.confidence.toLowerCase()}`}
@@ -285,8 +291,7 @@ export function SpotDetail({
               )}
               {score.coverage < 60 && (
                 <p className="notice">
-                  확인된 정보가 적습니다. 점수가 높더라도 방문 전 운영·시설
-                  정보를 확인해 주세요.
+                  비교할 정보가 부족해 종합 점수는 표시하지 않아요. 방문 전 운영·시설 정보를 확인해 주세요.
                 </p>
               )}
               <section className="detail-section">
@@ -484,16 +489,18 @@ export function SpotDetail({
         </div>
       </div>
       <div className="detail-bottom">
-        <a
+        <button
+          type="button"
           className="emergency-link"
-          href="tel:119"
-          aria-label="응급 상황 119 전화"
+          onClick={openEmergency ?? undefined}
+          disabled={!openEmergency}
+          aria-label="긴급 도움 열기"
         >
           <Phone size={16} />
           <span>
-            응급 상황<strong>119</strong>
+            긴급 도움<strong>112 · 119</strong>
           </span>
-        </a>
+        </button>
         {demo ? (
           <button className="primary" onClick={() => setTab("map")}>
             <MapPin size={17} />

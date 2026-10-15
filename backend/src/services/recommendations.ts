@@ -18,6 +18,7 @@ import { demoRecommendations } from "../mock/fixtures.js";
 import { emptyWeather } from "../utils/data.js";
 import { calculateScore } from "../utils/scoring.js";
 import { recommendationOrder } from "../../../shared/order.js";
+import { hasPublicFacilities, getImportedTouristInfo } from "../adapters/publicFacilities.js";
 
 export async function safeAdapter<T>(
   key: string,
@@ -114,8 +115,8 @@ export async function getRecommendations(
           safeAdapter<SupportFacility[]>(
             "touristInfo",
             "관광안내소",
-            !!config.touristInfoKey,
-            () => getTouristInfo(spot),
+            hasPublicFacilities() || !!config.touristInfoKey,
+            () => hasPublicFacilities() ? getImportedTouristInfo(spot) : getTouristInfo(spot),
             [],
           ),
           safeAdapter<SupportFacility[]>(
@@ -133,10 +134,11 @@ export async function getRecommendations(
           ...toilets.data,
         ];
         return {
+          checkedAt: new Date().toISOString(),
           spot,
           facilities,
           weather: weather.data,
-          score: calculateScore(spot, facilities, weather.data),
+          score: calculateScore(spot, facilities, weather.data, [...statuses, weather.status, medical.status, police.status, info.status, toilets.status]),
           statuses: [
             weather.status,
             medical.status,

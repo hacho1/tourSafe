@@ -1,0 +1,35 @@
+TourSafe branded real map — 2026-10-11
+
+Implemented
+- MapLibre GL JS 6.13.0 + OpenFreeMap vector tiles (actual OpenStreetMap geometry).
+- Original dark forest-green / mint palette, matching light mode, simplified road labels, custom numbered markers, lower information card.
+- Desktop place list at left; mobile map first and list below. No horizontal overflow at 390px viewport.
+- Map zoom, reset bounds, theme switch, region selection, markers/list -> place details and detail map.
+- LIVE consistently uses branded map, independent of optional legacy Kakao JavaScript key.
+- Lazy-load map engine; retained source attribution. External tiles not cached by service worker. No fabricated CCTV, risk score, or safe route.
+- Map load errors persist even if MapLibre emits load after a failed source; explicit retry resets the map.
+
+Verification
+- npm test: 99 passed, 0 failed (tests.txt).
+- npm run build: passed TypeScript and Vite (build.txt).
+- npm audit: 0 vulnerabilities; MapLibre 5.x was rejected for its reported sanitizer issue, fixed release 6.13.0 installed.
+- git diff --check: passed (line-ending notices only).
+- Browser: actual Seongsu roads/buildings/water/8 places; light/dark; zoom/reset; marker -> details -> detail map; Gwanghwamun region; 390x844 and 1440x1080 layouts.
+- Browser failure test: blocked tiles.openfreemap.org -> visible retry + all 8 place list rows; unblock + retry restored map. Temporary network block removed.
+- Production Vite preview at 5174: actual map + 8 markers, no warning/error console entries; temporary preview closed after validation.
+- Persistent dev preview at http://127.0.0.1:5173/#map. Restarted after dependency changes to remove stale Vite 5.x prebundle.
+- No deployment, real geolocation, calls, or messages.
+
+Limits
+- Map engine chunk ~1.05 MB (gzip ~288 KB) plus worker ~506 KB; Vite reports >500 KB chunk warning. Engine loaded separately from ~353 KB main JS.
+- OpenFreeMap public instance has no SLA. Official map attribution remains visible. WebGL and network required.
+- Nearby markers can overlap at small zoom; place list and zoom provide access.
+- CCTV not connected in this change. Verified national installation dataset is available as CSV and can be ingested server-side and exposed via radius-query API.
+- Seoul Ansimi CCTV public dataset is discontinued. Installation data does not verify live operation or provide live surveillance video.
+
+References
+https://openfreemap.org/quick_start/
+https://openfreemap.org/
+https://maplibre.org/maplibre-gl-js/docs/
+https://www.data.go.kr/data/15013094/standard.do
+https://data.seoul.go.kr/dataList/OA-20923/S/1/datasetView.do
