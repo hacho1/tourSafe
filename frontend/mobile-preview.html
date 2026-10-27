@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>TourSafe · 모바일 미리보기</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #e8eee6; color: #183e30; font: 14px/1.5 system-ui, sans-serif; }
+      header { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 20px; padding: 14px 18px; background: #fff; border-bottom: 1px solid #dce5d9; }
+      h1 { margin: 0; font-size: 16px; }
+      label { display: flex; align-items: center; gap: 8px; }
+      select, a { min-height: 44px; border-radius: 10px; font: inherit; }
+      select { padding: 8px; border: 1px solid #b7cbb6; background: white; color: inherit; }
+      a { display: inline-flex; align-items: center; padding: 8px 12px; color: #286b50; background: #e8f0e4; text-decoration: none; }
+      :focus-visible { outline: 3px solid #286b50; outline-offset: 3px; }
+      main { padding: 24px 16px; overflow: auto; }
+      .phone { width: max-content; margin: 0 auto; padding: 7px; border-radius: 25px; background: #183e30; box-shadow: 0 12px 32px #183e3026; }
+      iframe { display: block; border: 0; border-radius: 18px; background: #f5f7f2; }
+      p { margin: 16px 0 0; text-align: center; color: #53684e; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>TourSafe 모바일 미리보기</h1>
+      <label for="screen-size">화면 크기
+        <select id="screen-size">
+          <option value="320,568">작은 화면 · 320 × 568</option>
+          <option value="390,844" selected>기본 화면 · 390 × 844</option>
+          <option value="430,932">큰 화면 · 430 × 932</option>
+          <option value="320,400">낮은 화면 · 320 × 400</option>
+        </select>
+      </label>
+      <a href="/#map" target="_blank" rel="noopener">일반 화면 열기</a>
+    </header>
+    <main>
+      <div class="phone">
+        <iframe id="app-preview" src="/#map" title="투어세이프 모바일 화면" width="390" height="844" allow="geolocation 'self'; accelerometer 'self'; gyroscope 'self'"></iframe>
+      </div>
+      <p>실제 앱의 화면 너비를 바꾸는 미리보기입니다.<br />터치·GPS·흔들기 동작은 실제 휴대폰과 다를 수 있어요.</p>
+    </main>
+    <script>
+      const screenSize = document.getElementById('screen-size');
+      const preview = document.getElementById('app-preview');
+      screenSize.addEventListener('change', () => {
+        const [width, height] = screenSize.value.split(',').map(Number);
+        preview.width = String(width);
+        preview.height = String(height);
+      });
+    </script>
+  </body>
+</html>

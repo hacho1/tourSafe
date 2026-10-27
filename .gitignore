@@ -1,5 +1,6 @@
 node_modules/
 backend/data/public-facilities/
+backend/data/tourism-standard/
 dist/
 frontend/dist/
 .env

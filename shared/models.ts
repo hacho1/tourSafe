@@ -30,6 +30,7 @@ export interface SupportFacility extends Coordinates {
   holidays: string | null;
   languages: string | null;
   emergency: boolean | null;
+  locationNote?: string;
 }
 export interface WeatherInfo {
   temperature: Evidence<number>;
@@ -67,7 +68,19 @@ export interface TouristSpot extends Coordinates {
   openNow: Evidence<boolean>;
   closure: Evidence<boolean>;
   safety: SafetyEnvironment;
+  visitDetails?: VisitFacilityDetail[];
   distanceMeters: number;
+}
+export interface VisitFacilityDetail {
+  id: string;
+  label: string;
+  text: string;
+  source: DataSource;
+  updatedAt: string | null;
+}
+export interface PlaceAmenities {
+  safety: Partial<SafetyEnvironment>;
+  details: VisitFacilityDetail[];
 }
 export interface ScoreComponent {
   key: string;

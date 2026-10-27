@@ -291,3 +291,17 @@ node --import tsx scripts/import-public-data.ts --cctv 'C:/path/CCTV정보.csv' 
 - 화장실 원본 53,584행에는 좌표가 없습니다. 별도 전국 주소 변환 결과가 있으면 확인된 46,945곳 중 조회 위치에서 직선 3km 내의 가까운 최대 20곳을 지도에 표시합니다. 좌표는 주소 기준이며 실제 입구와 다를 수 있습니다. 위치 미확인 6,639곳은 해당 지역 주소 목록에 남깁니다. 새 CSV를 가져오면 `npm run geocode:toilets:national`로 예상 요청 수를 확인하고 쿼터 확인 후 별도 변환해야 합니다. 화장실 정보는 안전점수에 사용하지 않습니다.
 - `/api/map-facilities?lat=37.5445&lng=127.0374&area=서울특별시 성동구`는 공공시설, 주변 응급의료기관, 경찰(설정 시), 날씨를 독립된 상태와 함께 반환합니다. CSV나 API가 실패해도 가상 시설로 대체하지 않습니다.
 - 경찰 검색: [카카오 앱 관리](https://developers.kakao.com/console/app) → 앱 생성/선택 → 플랫폼 키 → REST API 키. `.env`의 `KAKAO_REST_API_KEY`에 저장하고 서버를 재시작합니다. JavaScript 키나 Admin 키를 쓰지 않습니다. [공식 앱 설정 안내](https://developers.kakao.com/docs/ko/app-setting/app), [Local API](https://developers.kakao.com/docs/ko/local/dev-guide).
+
+## 관광지 편의·접근성 정보 (2026-10-16)
+
+관광지 상세는 한국관광공사 무장애 여행 API, 기존 화장실 자료, 전국관광지정보표준데이터 CSV를 함께 사용합니다. 무장애 API는 서버의 `TOUR_API_KEY`를 재사용하며 별도 키가 필요한 경우에만 `ACCESSIBLE_TOUR_API_KEY`를 설정합니다. 접근로·출입구·유모차 이용 등의 원문 안내를 제공하며, 유모차 대여나 경사로 안내만으로 전체 동선의 유모차 이동 가능 여부를 확정하지 않습니다.
+
+```powershell
+npm run import:tourism -- 'C:/path/전국관광지정보표준데이터.csv'
+```
+
+가져온 원본은 `backend/data/tourism-standard/`에 보관하며 Git에서 제외합니다. 새 환경에는 이 폴더와 기존 `backend/data/public-facilities/`를 함께 배치하거나 원본을 다시 가져와야 합니다. 다른 경로는 `TOURISM_STANDARD_FILE`로 지정할 수 있습니다. 이번 파일은 892행을 읽었으며, 모든 행이 TourAPI 관광지와 연결됐다는 뜻은 아닙니다. 이름·주소와 좌표를 대조하고 후보가 여러 개이면 연결하지 않습니다.
+
+CSV 시설란에 명시된 화장실·수유실·벤치 등의 정보만 출처와 기준일을 붙여 반영합니다. 확인된 관광지 내부 편의시설은 기존 가족 편의시설 평가에 반영되지만, 주변 화장실이 있다는 이유만으로 관광지 내부 화장실이 있다고 처리하지 않습니다. 관광지 상세의 주변 화장실은 직선 3km 이내 최대 3곳이며, 주소로 변환한 좌표에는 위치 정확도 안내를 표시합니다. 빈 값·충돌하는 정보는 미확인으로 남습니다.
+
+테스트 148개와 빌드를 통과했고 실제 API 응답·CSV 연결·기존 화장실 조회를 확인했습니다. 이번 변경의 브라우저 렌더링은 확인하지 못했습니다. 구현 범위와 검증 기록은 [관광지 편의·접근성 정보 연결](docs/visit-facilities-2026-10-16/README.md)에 있습니다.

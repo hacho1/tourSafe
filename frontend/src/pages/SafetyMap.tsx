@@ -29,7 +29,7 @@ export function SafetyMap({ location, onLocation, active, onExplore, onSaved, on
   useEffect(() => {
     if (!active) { setDialog(null); return; }
   }, [active]);
-  return <div className="safety-app">
+  return <div className="safety-app refined-safety-app">
     <a className="skip-link" href="#live-safety-map" onClick={event => { event.preventDefault(); document.getElementById('live-safety-map')?.focus(); }}>안심 지도로 바로가기</a>
     <header className="sm-header emergency-header"><div className="sm-header-inner">
       <a className="sm-brand" href="#map" onClick={event => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label="TourSafe 안심 지도"><span><ShieldCheck size={26} /></span><b>Tour<span>Safe</span><small>여행의 모든 순간, 안심</small></b></a>

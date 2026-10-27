@@ -9,6 +9,9 @@ export const config = {
   tourBase:
     process.env.TOUR_API_BASE_URL ||
     "https://apis.data.go.kr/B551011/KorService2",
+  accessibleTourKey: process.env.ACCESSIBLE_TOUR_API_KEY || process.env.TOUR_API_KEY || "",
+  accessibleTourBase: process.env.ACCESSIBLE_TOUR_API_BASE_URL || "https://apis.data.go.kr/B551011/KorWithService2",
+  tourismStandardFile: process.env.TOURISM_STANDARD_FILE || "backend/data/tourism-standard/전국관광지정보표준데이터.csv",
   weatherKey: process.env.WEATHER_API_KEY || "",
   medicalKey: process.env.MEDICAL_API_KEY || "",
   hospitalKey: process.env.HOSPITAL_API_KEY || "",

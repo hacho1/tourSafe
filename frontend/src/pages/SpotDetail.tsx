@@ -27,6 +27,7 @@ import { Modal } from "../components/Modal";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 import { useEmergency } from "../components/EmergencyContext";
 import { SpotImage } from "../components/SpotCard";
+import { VisitFacilityInfo } from '../components/VisitFacilityInfo';
 import { MapPanel, type MapPoint } from "../components/MapPanel";
 import {
   CONFIDENCE,
@@ -85,7 +86,7 @@ export function SpotDetail({
   const unknownItems = Object.entries(spot.safety).filter(
     ([, value]) => value.status === "UNKNOWN",
   );
-  const nearbyHighlights = (["MEDICAL", "POLICE", "TOURIST_INFO"] as const).flatMap(
+  const nearbyHighlights = (["MEDICAL", "POLICE", "TOURIST_INFO", "TOILET"] as const).flatMap(
     (type) => facilities.filter((facility) => facility.type === type)
       .sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, 1),
   );
@@ -330,6 +331,7 @@ export function SpotDetail({
                   안전성을 보증하지 않습니다.
                 </p>
               </section>
+              <VisitFacilityInfo spot={spot} />
               <section className="detail-section check-section">
                 <h3>
                   <CircleHelp size={19} />
@@ -354,6 +356,7 @@ export function SpotDetail({
                 </h3>
                 <p className="small muted">
                   관광지 기준 직선거리 · 실제 이동 경로는 지도에서 확인
+                  · 주변 시설은 관광지 내부 시설과 구분해 안내해요.
                 </p>
                 {nearbyHighlights.map((f) => (
                     <button
@@ -364,7 +367,7 @@ export function SpotDetail({
                       <FacilityIcon type={f.type} />
                       <span>
                         <b>{f.name}</b>
-                        <small>{sourceLabel(f.source)}</small>
+                        <small>{sourceLabel(f.source)}{f.locationNote ? ' · 주소 기준 위치' : ''}</small>
                       </span>
                       <strong>{distance(f.distanceMeters)}</strong>
                       <ChevronRight size={16} />
@@ -399,6 +402,7 @@ export function SpotDetail({
           )}
           {tab === "facilities" && (
             <>
+              <VisitFacilityInfo spot={spot} showFacts={false} />
               <section className="detail-section">
                 <h3>
                   <Baby size={19} />
@@ -562,6 +566,7 @@ function FacilityCard({
         <b>{distance(f.distanceMeters)}</b>
       </div>
       <p>{f.address || "주소 미제공"} · 직선거리</p>
+      {f.locationNote && <p className="small muted">{f.locationNote}</p>}
       {f.openingHours && <p>운영정보 {f.openingHours}</p>}
       {f.holidays && <p>휴무 {f.holidays}</p>}
       {f.languages && <p>외국어 {f.languages}</p>}

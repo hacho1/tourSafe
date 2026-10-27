@@ -13,6 +13,7 @@ import "./live-map.css";
 import "./reference-map.css";
 import "./help-map.css";
 import "./calm-map.css";
+import "./refined-map.css";
 
 function pageFromHash(): AppPage {
   const hash = window.location.hash.slice(1);
