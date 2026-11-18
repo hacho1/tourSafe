@@ -5,6 +5,7 @@ import {
   SAVED_PLACES_REMOVE_ERROR, SAVED_PLACES_SAVE_ERROR,
   type SavedPlacesStorage,
 } from "../frontend/src/utils/savedPlaces.js";
+import { VISIT_PLANS_KEY } from "../frontend/src/utils/visitPlans.js";
 
 class FakeStorage implements SavedPlacesStorage {
   raw: string | null;
@@ -14,6 +15,7 @@ class FakeStorage implements SavedPlacesStorage {
 
   constructor(raw: string | null = null) { this.raw = raw; }
   getItem(key: string) {
+    if (key === VISIT_PLANS_KEY) return null;
     assert.equal(key, SAVED_PLACES_KEY);
     if (this.failRead) throw new Error("SecurityError");
     return this.raw;

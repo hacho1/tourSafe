@@ -1,5 +1,6 @@
 import type { HospitalRegionId, HospitalResponse } from "../../../shared/hospitals";
 import type { Coordinates } from '../../../shared/models';
+import { offlineFetch } from './offline';
 
 export type HospitalFetchErrorCode = "NETWORK" | "TIMEOUT" | "UPSTREAM" | "ACCESS" | "HTTP" | "RESPONSE" | "UNKNOWN";
 
@@ -40,7 +41,7 @@ function requestError(error: unknown, signal: AbortSignal, readingBody = false):
 export async function fetchHospitals(
   region: HospitalRegionId | Coordinates,
   signal: AbortSignal,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch = offlineFetch,
 ): Promise<HospitalResponse> {
   const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(90_000)]);
   let response: Response;

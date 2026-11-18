@@ -58,7 +58,7 @@ export function useShake(onShake: () => void, paused: boolean) {
       if (!mounted.current) return;
       if (permission !== "granted") { setMessage("움직임 권한이 허용되지 않았어요. ‘도움’ 버튼을 이용해 주세요."); return; }
       setEnabled(true);
-      setMessage("도움 화면을 닫고 가볍게 두세 번 흔들어 보세요. 앱을 보고 있을 때 이 화면이 열려요.");
+      setMessage("도움 화면을 닫고 가볍게 두 번 흔들어 보세요. 앱을 보고 있을 때 이 화면이 열려요. 전화는 직접 선택해요.");
     } catch {
       if (mounted.current) setMessage("흔들기를 켜지 못했어요. ‘도움’ 버튼을 이용해 주세요.");
     } finally {

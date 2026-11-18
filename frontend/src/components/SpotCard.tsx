@@ -9,11 +9,10 @@ import {
   Info,
   CloudSun,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Recommendation } from "../../../shared/models";
-import { CONFIDENCE } from "../config/constants";
 import { distance } from "../utils/format";
-import { ScoreBadge } from "./ScoreBadge";
+import { Suitability } from "./TravelNeeds";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 export function SpotImage({
   src,
@@ -47,14 +46,23 @@ export function SpotCard({
   onSave,
   onOpen,
   index,
+  comparing = false,
+  onCompare,
+  onPlan,
 }: {
   item: Recommendation;
   saved: boolean;
   onSave: () => void;
   onOpen: () => void;
   index: number;
+  comparing?: boolean;
+  onCompare?: () => void;
+  onPlan?: () => void;
 }) {
-  const { spot, score, weather, facilities } = useCurrentRecommendation(item);
+  const current = useCurrentRecommendation(item);
+  const { spot, score, weather, facilities } = current;
+  const assessmentId = useId();
+  const warningId = useId();
   const demo = spot.source.kind === "DEMO_DATA";
   return (
     <article
@@ -73,6 +81,7 @@ export function SpotCard({
         className="card-main"
         onClick={onOpen}
         aria-label={`${spot.name} 상세 보기`}
+        aria-describedby={score.hardFilter.length ? `${assessmentId} ${warningId}` : assessmentId}
       >
         <div className="card-image">
           <SpotImage
@@ -81,7 +90,7 @@ export function SpotCard({
           />
           <div className="image-shade" />
           <span className="card-grade">
-            <ScoreBadge score={score} compact />
+            <span>필요조건 확인</span>
           </span>
           <span className="card-category">{spot.category}</span>
           {demo && spot.imageUrl && (
@@ -94,15 +103,11 @@ export function SpotCard({
             <ArrowUpRight size={20} />
           </div>
           <p className="card-distance">
-            <MapPin size={13} /> {distance(spot.distanceMeters)}{" "}
-            <span>· 직선거리</span>
+            <MapPin size={13} /> {current.offlineSnapshotAt ? '저장 당시 검색 위치 기준' : distance(spot.distanceMeters)}{" "}
+            <span>{current.offlineSnapshotAt ? '· 현재 거리 미확인' : '· 직선거리'}</span>
           </p>
-          <div className="card-score-row">
-            <ScoreBadge score={score} />
-            <span className={`confidence ${score.confidence.toLowerCase()}`}>
-              정보 {CONFIDENCE[score.confidence]} <b>{score.coverage}%</b>
-            </span>
-          </div>
+          <Suitability id={assessmentId} item={current} compact />
+          {score.hardFilter.length > 0 && <p id={warningId} className="card-condition-warning">방문 주의: {score.hardFilter.join(" · ")}</p>}
           <div className="card-conditions">
             <span
               className={spot.openNow.value === true ? "positive" : "muted"}
@@ -130,7 +135,7 @@ export function SpotCard({
               [
                 ["MEDICAL", Hospital, "의료"],
                 ["POLICE", Shield, "경찰"],
-                ["TOURIST_INFO", Info, "안내소"],
+                ["TOURIST_INFO", Info, "관광지원 안내소"],
               ] as const
             ).map(([type, Icon, label]) => {
               const facility = facilities
@@ -151,6 +156,7 @@ export function SpotCard({
           </div>
         </div>
       </button>
+      {onCompare && <div className="candidate-card-actions"><button type="button" aria-pressed={comparing} aria-label={`${spot.name} 비교 ${comparing ? '선택 해제' : '선택'}`} onClick={onCompare}>{comparing ? '비교에 담음' : '후보 비교에 담기'}</button><button type="button" onClick={onPlan || onOpen} aria-label={`${spot.name} 가족 준비 카드 · 방문 전 확인 목록 열기`}>가족 준비 카드</button></div>}
     </article>
   );
 }

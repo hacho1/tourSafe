@@ -1,0 +1,11 @@
+.native-connection-entry { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; max-width:1180px; padding:8px 20px; margin:auto; color:#244d42; font-size:.875rem; }
+.native-connection-entry button, .native-connection-body button { min-height:48px; border:1px solid #abbdb2; background:#fff; color:#244d42; border-radius:8px; padding:10px 14px; font:inherit; cursor:pointer; }
+.native-connection-body { padding:24px; overflow:auto; color:#244d42; line-height:1.65; }
+.native-connection-body h2 { font-size:1.375rem; }
+.native-connection-body form { display:grid; gap:12px; margin-block:20px; }
+.native-connection-body input { min-width:0; width:100%; min-height:48px; padding:12px; border:1px solid #abbdb2; border-radius:8px; font:inherit; font-size:1rem; }
+.native-connection-body [role="status"] { padding:12px; background:#f0f5f0; border-radius:8px; }
+.native-connection-body button:disabled { opacity:.55; cursor:default; }
+.native-connection-body :is(input,button):focus-visible, .native-connection-entry button:focus-visible { outline:3px solid #146451; outline-offset:3px; }
+.native-app :is(button, .icon-button) { min-height:48px; }
+.native-app .icon-button { min-width:48px; }

@@ -1,0 +1,83 @@
+.modal.needs-dialog[open] { display:flex; flex-direction:column; overflow:hidden; max-height:calc(100dvh - 24px); }
+.needs-dialog .modal-top { flex-shrink:0; }
+.needs-dialog .needs-settings { flex:1; min-height:0; max-height:none; overflow:auto; overscroll-behavior:contain; }
+.needs-settings-footer { flex-shrink:0; border-top:1px solid #d6e1d4; padding:12px 20px; background:#fff; }
+.needs-settings-footer p { margin:0 0 8px; font-size:14px; line-height:1.5; color:#365646; }
+.needs-settings-footer button { min-height:44px; padding:10px 18px; font-size:15px; }
+.suitability.compact .needs-summary { font-size:13px; line-height:1.6; }
+.suitability.compact ul { padding-left:17px; margin:8px 0; }
+.suitability.compact li { font-size:14px; line-height:1.55; margin:5px 0; }
+.suitability.compact small { font-size:12px; line-height:1.5; }
+.suitability.compact .needs-current-note { display:block; margin-top:8px; color:#3e604d; }
+.needs-current-limit { font-size:14px; line-height:1.65; }
+.candidate-flow-note { margin:14px 0; color:#254c3b; }
+.candidate-flow-note p { margin:5px 0; font-size:14px; line-height:1.6; }
+.candidate-card-actions { display:flex; gap:8px; border-top:1px solid #e0e7dc; padding:12px 16px; background:#fff; }
+.candidate-card-actions button { min-height:44px; flex:1; border:1px solid #bbcebe; border-radius:8px; padding:8px; background:#fff; color:#1e5945; font:inherit; font-size:14px; cursor:pointer; }
+.candidate-card-actions button[aria-pressed="true"] { background:#e6f1df; border-color:#377855; font-weight:700; }
+.candidate-card-actions button:hover { background:#eef5e8; }
+.with-comparison-tray { padding-bottom:126px; }
+.candidate-comparison-tray { position:fixed; bottom:calc(80px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:min(740px,calc(100% - 24px)); display:flex; align-items:center; gap:10px; padding:12px; background:#f6faf1; color:#214d39; border:1px solid #adcaac; border-radius:12px; z-index:24; box-shadow:0 8px 24px #173f3420; }
+.candidate-comparison-tray > div { flex:1; min-width:0; }
+.candidate-comparison-tray strong { font-size:15px; }
+.candidate-comparison-tray span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.candidate-comparison-tray p { font-size:13px; margin:6px 0 0; }
+.candidate-comparison-tray button { min-height:44px; padding:9px 12px; font-size:14px; flex-shrink:0; }
+.candidate-comparison-tray button:disabled { background:#e6ece1; color:#51624e; border-color:#cbd5c6; cursor:default; }
+.modal.candidate-comparison-dialog[open] { display:flex; flex-direction:column; width:900px; max-height:calc(100dvh - 24px); overflow:hidden; color:#214d39; }
+.candidate-comparison-dialog .modal-top { flex-shrink:0; font-size:15px; color:#214d39; }
+.candidate-comparison-dialog .icon-button { min-width:44px; min-height:44px; }
+.candidate-comparison-scroll { padding:24px; overflow:auto; min-height:0; overscroll-behavior:contain; }
+.candidate-comparison-scroll h2 { font-size:25px; line-height:1.4; margin:0 0 14px; }
+.candidate-comparison-scroll h3 { font-size:18px; line-height:1.5; margin:0 0 8px; }
+.candidate-comparison-scroll p { font-size:15px; line-height:1.65; margin:8px 0 14px; }
+.comparison-limit { background:#f0f5e9; padding:12px 14px; border-radius:8px; }
+.comparison-candidates,.comparison-cells { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.comparison-candidates { margin:24px 0; }
+.comparison-candidates > div { min-width:0; }
+.comparison-candidates strong { font-size:15px; }
+.comparison-condition { padding:20px 0; border-top:1px solid #ceddcd; }
+.comparison-question { color:#3c5d48; }
+.comparison-cell { min-width:0; padding-top:8px; }
+.comparison-cell > b { display:block; font-size:14px; color:#3c5d48; margin-bottom:8px; }
+.comparison-cell > strong { font-size:16px; }
+.comparison-cell.state-unmet > strong { color:#8b3e24; }
+.comparison-cell summary { min-height:44px; padding:10px 0; cursor:pointer; font-size:14px; }
+.comparison-cell small { display:block; font-size:13px; line-height:1.6; color:#48604e; }
+.comparison-cell a { display:inline-block; min-height:44px; padding:10px 0; color:#1c6246; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
+.comparison-next { border-top:1px solid #ceddcd; padding-top:20px; margin-top:10px; }
+.comparison-next button { display:block; min-height:44px; margin:10px 0 0; padding:12px 16px; width:100%; font-size:15px; }
+.detail-visit-plan { scroll-margin-top:112px; }
+.visit-plan-editor { margin:22px 0; padding-top:20px; border-top:1px solid #cfddcc; color:#224936; min-width:0; }
+.visit-plan-heading { font-size:20px; line-height:1.45; margin:0 0 10px; }
+.visit-plan-editor p { margin:8px 0 12px; line-height:1.65; }
+.visit-plan-editor .visit-plan-help,.visit-plan-editor .visit-plan-meta { font-size:13px; color:#425d49; }
+.visit-plan-preferences { font-size:14px; }
+.visit-plan-editor button,.visit-plan-actions a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 14px; border:1px solid #b8cbb6; border-radius:8px; background:#fff; color:#1e5941; font:inherit; font-size:14px; cursor:pointer; }
+.visit-plan-editor button:hover { background:#eef5e8; }
+.visit-plan-field { margin:20px 0 14px; }
+.visit-plan-field label { display:block; font-size:15px; font-weight:700; margin-bottom:8px; }
+.visit-plan-field textarea { display:block; box-sizing:border-box; width:100%; min-width:0; max-width:100%; border:1px solid #b8cbb6; border-radius:8px; padding:12px; color:#244d39; background:#fff; font:inherit; font-size:16px; line-height:1.65; resize:vertical; caret-color:#17654b; }
+.visit-plan-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.visit-plan-actions button:first-child { background:#146451; border-color:#146451; color:#fff; font-weight:700; }
+.visit-plan-actions a { text-decoration:underline; text-underline-offset:4px; }
+.visit-plan-warning,.visit-plan-error { color:#79451e; background:#fff4e4; padding:10px 12px; border-radius:8px; font-size:14px; line-height:1.65; margin:12px 0; }
+.visit-plan-status { color:#245936; font-size:14px; }
+.saved-visit-plan { border-top:1px solid #cbdac8; margin-top:16px; }
+.saved-visit-plan > summary { min-height:44px; padding:12px 0; font-size:15px; font-weight:700; color:#23513a; cursor:pointer; }
+.saved-visit-plan .visit-plan-editor { border:0; margin:0; padding:8px 0; }
+:is(.candidate-comparison-dialog,.candidate-comparison-tray,.candidate-card-actions,.visit-plan-editor,.needs-dialog) :is(button,a,summary,select,textarea):focus-visible { outline:3px solid #2b7652; outline-offset:3px; }
+:is(.candidate-comparison-dialog,.visit-plan-editor) ::selection { background:#cde6c7; color:#173b2c; }
+:is(.candidate-comparison-dialog,.visit-plan-editor,.candidate-flow-note) { word-break:keep-all; overflow-wrap:anywhere; }
+@media (max-width:600px) {
+  .candidate-comparison-scroll { padding:20px; }
+  .comparison-candidates { gap:12px; }
+  .comparison-candidates h3 { font-size:16px; }
+  .comparison-candidates p,.comparison-candidates strong { font-size:14px; }
+  .comparison-cells { grid-template-columns:1fr; gap:12px; }
+  .comparison-cell + .comparison-cell { border-top:1px dashed #d1dfcd; padding-top:16px; }
+  .candidate-comparison-tray { gap:6px; padding:10px; }
+  .candidate-comparison-tray button { padding:9px; font-size:13px; }
+  .candidate-comparison-tray strong { font-size:14px; }
+  .candidate-card-actions { padding:10px 12px; }
+}

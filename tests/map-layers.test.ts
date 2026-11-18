@@ -2,18 +2,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Hospital } from '../shared/hospitals.js';
 import type { MapFacility } from '../shared/mapFacilities.js';
-import { canExpandMapCluster, groupMapPins, mapLayerFor, mergeMapMedical, parseMapLayers } from '../frontend/src/utils/mapLayers.js';
+import { canExpandMapCluster, groupMapPins, isCctvOnly, mapLayerFor, mergeMapMedical, parseMapLayers } from '../frontend/src/utils/mapLayers.js';
 
 const source = { kind: 'PUBLIC_DATA' as const, name: 'NEMC test', url: null };
 const hospital = (id: string): Hospital => ({ id, name: '같은 이름 병원', lat: 37.54, lng: 127.03, address: null, phone: null, departments: ['내과'], hours: [], distanceMeters: 150, source, updatedAt: null, detailStatus: 'OK' });
 const emergency = (id: string): MapFacility => ({ id: `medical-${id}`, type: 'MEDICAL', name: '응급기관 등록명', lat: 37.541, lng: 127.031, address: null, phone: '02-123-4567', openingHours: null, distanceMeters: 180, source, updatedAt: null });
 
 test('map preferences preserve independent off states and recover from corrupt storage', () => {
-  assert.deepEqual(parseMapLayers(null), { CCTV: true, POLICE: true, MEDICAL: true, TOILET: false });
+  assert.deepEqual(parseMapLayers(null), { CCTV: false, POLICE: true, MEDICAL: true, TOILET: false });
   assert.deepEqual(parseMapLayers('{broken'), parseMapLayers(null));
   assert.deepEqual(parseMapLayers('{"CCTV":"false","POLICE":true,"MEDICAL":true}'), parseMapLayers(null));
   assert.deepEqual(parseMapLayers('{"CCTV":false,"POLICE":true,"MEDICAL":false}'), { CCTV: false, POLICE: true, MEDICAL: false, TOILET: false });
   assert.deepEqual(parseMapLayers('{"CCTV":false,"POLICE":false,"MEDICAL":false}'), { CCTV: false, POLICE: false, MEDICAL: false, TOILET: false });
+  assert.deepEqual(parseMapLayers('{"CCTV":true,"POLICE":true,"MEDICAL":false,"TOILET":true}'), { CCTV: true, POLICE: true, MEDICAL: false, TOILET: true });
 });
 test('toilet preference survives reload without changing existing toggles', () => {
   assert.deepEqual(parseMapLayers(JSON.stringify({ CCTV: false, POLICE: true, MEDICAL: false, TOILET: true })), { CCTV: false, POLICE: true, MEDICAL: false, TOILET: true });
@@ -27,6 +28,12 @@ test('both medical types share one display group without swallowing other catego
   assert.equal(mapLayerFor('TOILET'), 'TOILET');
   assert.equal(mapLayerFor('TOURIST_INFO'), null);
   assert.equal(mapLayerFor('SPOT'), null);
+});
+test('only CCTV-exclusive markers use the reference style; mixed facilities retain their emphasis', () => {
+  assert.equal(isCctvOnly([{type:'CCTV'}, {type:'CCTV'}]), true);
+  assert.equal(isCctvOnly([{type:'CCTV'}, {type:'MEDICAL'}]), false);
+  assert.equal(isCctvOnly([{type:'CCTV'}, {type:'POLICE'}]), false);
+  assert.equal(isCctvOnly([]), false);
 });
 test('matching NEMC HPIDs merge into one hospital with emergency source and phone retained', () => {
   const result = mergeMapMedical([emergency('A000001')], [hospital('A000001')]);

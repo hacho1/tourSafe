@@ -43,6 +43,7 @@ export interface MapFacility extends Coordinates {
   addressLocation?: AddressLocation;
 }
 export interface MapFacilitiesResponse {
+  offlineSnapshotAt?: string;
   origin: Coordinates;
   facilities: MapFacility[];
   totals: Partial<Record<MapFacilityType, number>>;

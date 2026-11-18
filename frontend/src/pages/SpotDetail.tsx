@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Check,
@@ -12,7 +12,6 @@ import {
   Navigation,
   Phone,
   Shield,
-  ShieldCheck,
   Sun,
   Clock3,
   Wind,
@@ -20,18 +19,20 @@ import {
   Baby,
   Trees,
   CalendarDays,
-  AlertTriangle,
 } from "lucide-react";
 import type { Recommendation, SupportFacility } from "../../../shared/models";
 import { Modal } from "../components/Modal";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 import { useEmergency } from "../components/EmergencyContext";
 import { SpotImage } from "../components/SpotCard";
+import { FamilyPreparationCard } from '../components/FamilyPreparationCard';
+import { SnapshotNotice } from '../components/OfflineNotice';
+import { VisitFacilityInfo } from '../components/VisitFacilityInfo';
+import { facilityDistanceLabel, isAddressReference } from '../utils/facilityLocation';
+import { FacilityLocationEvidence } from '../components/FacilityLocationEvidence';
 import { MapPanel, type MapPoint } from "../components/MapPanel";
 import {
-  CONFIDENCE,
   FACILITY_LABEL,
-  scoreSummary,
   SAFETY_LABEL,
 } from "../config/constants";
 import {
@@ -51,18 +52,28 @@ export function SpotDetail({
   onSave,
   onClose,
   initialTab = "safety",
+  focusPlan = false,
+  onOpenSavedPlan,
 }: {
   item: Recommendation;
   saved: boolean;
   onSave: () => void;
   onClose: () => void;
   initialTab?: Tab;
+  focusPlan?: boolean;
+  onOpenSavedPlan?: (placeId: string) => void;
 }) {
-  const { spot, score, weather, facilities, statuses } = useCurrentRecommendation(item);
-  const summary = scoreSummary(score);
+  const { spot, score, weather, facilities, statuses, offlineSnapshotAt } = useCurrentRecommendation(item);
   const openEmergency = useEmergency();
+  const planSection = useRef<HTMLDivElement>(null);
+  const planFormId = useId();
   const [tab, setTab] = useState<Tab>(initialTab),
     [selected, setSelected] = useState(spot.id);
+  useEffect(() => {
+    if (!focusPlan || tab !== 'safety') return;
+    const frame = requestAnimationFrame(() => { planSection.current?.scrollIntoView({block:'start'}); planSection.current?.querySelector<HTMLElement>('h3')?.focus({preventScroll:true}); });
+    return () => cancelAnimationFrame(frame);
+  }, [focusPlan, tab]);
   const demo = spot.source.kind === "DEMO_DATA",
     call = phoneLink(spot.phone);
   const mapPoints = useMemo<MapPoint[]>(
@@ -85,7 +96,7 @@ export function SpotDetail({
   const unknownItems = Object.entries(spot.safety).filter(
     ([, value]) => value.status === "UNKNOWN",
   );
-  const nearbyHighlights = (["MEDICAL", "POLICE", "TOURIST_INFO"] as const).flatMap(
+  const nearbyHighlights = (["MEDICAL", "POLICE", "TOURIST_INFO", "TOILET"] as const).flatMap(
     (type) => facilities.filter((facility) => facility.type === type)
       .sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, 1),
   );
@@ -96,6 +107,7 @@ export function SpotDetail({
       className="detail-dialog"
     >
       <div className="detail-scroll">
+        <SnapshotNotice at={offlineSnapshotAt} label="방문지" />
         <div className="detail-cover">
           <SpotImage
             src={spot.imageUrl}
@@ -123,21 +135,15 @@ export function SpotDetail({
             <h2>{spot.name}</h2>
             <p>
               <MapPin size={14} />
-              {distance(spot.distanceMeters)} · 출발 위치에서 직선거리
+              {offlineSnapshotAt ? '보관한 방문 자료 · 현재 이동거리 미확인' : `${distance(spot.distanceMeters)} · 출발 위치에서 직선거리`}
             </p>
           </div>
-          <span
-            className={`grade-pill ${score.grade === "HOLD" ? "hold" : ""}`}
-          >
-            <ShieldCheck size={16} />
-            {summary.label}
-          </span>
         </div>
         <div className="detail-tabs" role="tablist" aria-label="관광지 정보">
           {(
             [
               ["info", "정보"],
-              ["safety", "안전정보"],
+              ["safety", "가족 준비"],
               ["facilities", "편의시설"],
               ["map", "지도"],
             ] as const
@@ -259,77 +265,9 @@ export function SpotDetail({
           )}
           {tab === "safety" && (
             <>
-              <div className="score-summary">
-                <div
-                  className="score-ring"
-                  style={
-                    { "--score": `${summary.total ?? 0}%` } as React.CSSProperties
-                  }
-                >
-                  <div>
-                    <strong>{summary.total ?? "—"}</strong>
-                    <span>/ 100</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="eyebrow">TOURSAFE 방문 조건 점수</span>
-                  <h3>{summary.label}</h3>
-                  <p>현재 확인 가능한 정보 기준</p>
-                  <span
-                    className={`confidence ${score.confidence.toLowerCase()}`}
-                  >
-                    정보 신뢰도 {CONFIDENCE[score.confidence]} · 확인율{" "}
-                    {score.coverage}%
-                  </span>
-                </div>
-              </div>
-              {score.hardFilter.length > 0 && (
-                <div className="notice warning">
-                  <AlertTriangle size={18} />
-                  <span>{score.hardFilter.join(" · ")}</span>
-                </div>
-              )}
-              {score.coverage < 60 && (
-                <p className="notice">
-                  비교할 정보가 부족해 종합 점수는 표시하지 않아요. 방문 전 운영·시설 정보를 확인해 주세요.
-                </p>
-              )}
-              <section className="detail-section">
-                <h3>
-                  <ShieldCheck size={19} />
-                  추천 근거를 확인해 보세요
-                </h3>
-                <div className="score-parts">
-                  {score.components.map((p) => (
-                    <div className="score-part" key={p.key}>
-                      <div>
-                        <span>{p.label}</span>
-                        <b>
-                          {p.earnedPoints === null
-                            ? "미확인"
-                            : `${p.earnedPoints} / ${p.maxPoints}`}
-                        </b>
-                      </div>
-                      <div className="score-track">
-                        <span
-                          style={{
-                            width: `${((p.earnedPoints ?? 0) / p.maxPoints) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <small>
-                        {p.detail}
-                        {p.knownWeight < p.maxPoints &&
-                          ` · 미확인 배점 ${p.maxPoints - p.knownWeight} 제외`}
-                      </small>
-                    </div>
-                  ))}
-                </div>
-                <p className="small muted">
-                  획득 점수 ÷ 확인된 배점 × 100. 확인율은 배점 기준이며 실제
-                  안전성을 보증하지 않습니다.
-                </p>
-              </section>
+              <div ref={planSection} className="detail-visit-plan"><FamilyPreparationCard item={{ spot, score, weather, facilities, statuses }} formId={planFormId} onSelectFacility={selectFacility} onOpenSaved={onOpenSavedPlan ? placeId => { onClose(); onOpenSavedPlan(placeId); } : undefined} /></div>
+              <details className="data-status"><summary>기존 항목의 정보 확인율 보기</summary><p className="small muted">기존 항목의 가중 정보 확인율 {score.coverage}% · 데이터 정확도나 안전 확률이 아닙니다.</p></details>
+              <VisitFacilityInfo spot={spot} />
               <section className="detail-section check-section">
                 <h3>
                   <CircleHelp size={19} />
@@ -343,17 +281,18 @@ export function SpotDetail({
                   ))}
                 </div>
                 <p className="small">
-                  기상특보·현장 통제·사고 이력은 자동 확인되지 않습니다.
+                  기상특보와 사고 이력은 자동 확인되지 않습니다. 공식 폐쇄·출입통제 자료가 제공된 경우 별도 경고로 표시하며, 현장 상황은 방문 전 확인해 주세요.
                   미확인은 시설이 없다는 뜻이 아닙니다.
                 </p>
               </section>
               <section className="detail-section">
                 <h3>
                   <Hospital size={19} />
-                  주변 도움받을 곳
+                  주변 긴급지원과 관광지원
                 </h3>
                 <p className="small muted">
-                  관광지 기준 직선거리 · 실제 이동 경로는 지도에서 확인
+                  의료·경찰은 긴급지원 정보, 관광안내소는 비긴급 관광지원입니다. 관광안내·통역은 1330으로 문의할 수 있어요. 관광지 기준 직선거리 · 실제 이동 경로는 지도에서 확인
+                  · 주변 시설은 관광지 내부 시설과 구분해 안내해요.
                 </p>
                 {nearbyHighlights.map((f) => (
                     <button
@@ -364,9 +303,9 @@ export function SpotDetail({
                       <FacilityIcon type={f.type} />
                       <span>
                         <b>{f.name}</b>
-                        <small>{sourceLabel(f.source)}</small>
+                        <small>{sourceLabel(f.source)}{f.locationNote ? ' · 주소 기준 위치' : ''}</small>
                       </span>
-                      <strong>{distance(f.distanceMeters)}</strong>
+                      <strong className={isAddressReference(f) ? 'address-reference-label' : ''}>{facilityDistanceLabel(f)}</strong>
                       <ChevronRight size={16} />
                     </button>
                   ))}
@@ -399,6 +338,7 @@ export function SpotDetail({
           )}
           {tab === "facilities" && (
             <>
+              <VisitFacilityInfo spot={spot} showFacts={false} />
               <section className="detail-section">
                 <h3>
                   <Baby size={19} />
@@ -488,7 +428,7 @@ export function SpotDetail({
           )}
         </div>
       </div>
-      <div className="detail-bottom">
+      <div className={`detail-bottom ${tab === 'safety' ? 'detail-plan-actions' : ''}`}>
         <button
           type="button"
           className="emergency-link"
@@ -501,10 +441,11 @@ export function SpotDetail({
             긴급 도움<strong>112 · 119</strong>
           </span>
         </button>
+        {tab === 'safety' && <button type="submit" form={planFormId} className="primary detail-plan-save">준비 카드 저장</button>}
         {demo ? (
           <button className="primary" onClick={() => setTab("map")}>
             <MapPin size={17} />
-            예시 위치 확인
+            {tab === 'safety' ? '예시 위치' : '예시 위치 확인'}
           </button>
         ) : (
           <a
@@ -514,7 +455,7 @@ export function SpotDetail({
             rel="noreferrer"
           >
             <Navigation size={17} />
-            Kakao 길찾기
+            {tab === 'safety' ? '길찾기' : 'Kakao 길찾기'}
             <ArrowUpRight size={17} />
           </a>
         )}
@@ -554,15 +495,17 @@ function FacilityCard({
         <FacilityIcon type={f.type} />
         <div>
           <small>
-            {FACILITY_LABEL[f.type]}
+            {f.type === "MEDICAL" ? (f.emergency === true ? "응급의료기관" : f.emergency === false ? "일반 의료기관" : "의료기관 · 응급 여부 미확인") : FACILITY_LABEL[f.type]}
             {demo && " · DEMO"}
           </small>
           <h4>{f.name}</h4>
         </div>
-        <b>{distance(f.distanceMeters)}</b>
+        <b className={isAddressReference(f) ? 'address-reference-label' : ''}>{facilityDistanceLabel(f)}</b>
       </div>
-      <p>{f.address || "주소 미제공"} · 직선거리</p>
-      {f.openingHours && <p>운영정보 {f.openingHours}</p>}
+      <p>{f.address || "주소 미제공"}</p>
+      {f.locationNote && <p className="small muted">{f.locationNote}</p>}
+      <FacilityLocationEvidence facility={f} origin="방문지 자료 좌표" />
+      {f.type === "TOURIST_INFO" ? <><p>관광정보·길 안내 등 비긴급 관광지원시설이며 응급 구조기관이 아닙니다.</p><p>운영시간 {f.openingHours || "미확인"}</p><p>연락처 {f.phone || "미제공"}</p><p>관광안내·통역 {demo ? "1330" : <a href="tel:1330">1330</a>}</p></> : f.openingHours && <p>운영정보 {f.openingHours}</p>}
       {f.holidays && <p>휴무 {f.holidays}</p>}
       {f.languages && <p>외국어 {f.languages}</p>}
       {f.emergency && (

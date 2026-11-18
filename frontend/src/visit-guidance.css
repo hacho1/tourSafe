@@ -1,0 +1,73 @@
+.app-visit-notices { max-width:1120px; padding:0 20px; margin:12px auto 0; color:#173f34; }
+.app-visit-notices:empty { display:none; }
+.first-visit-prompt { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 18px; background:#edf4e9; border:1px solid #d3e1cc; border-radius:12px; margin-bottom:8px; }
+.first-visit-prompt h2,.night-notice h2 { margin:0 0 4px; font-size:17px; line-height:1.4; }
+.first-visit-prompt p { margin:0; font-size:14px; line-height:1.6; }
+.first-visit-actions { display:flex; flex-shrink:0; gap:8px; }
+.guide-primary,.guide-secondary { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; border-radius:8px; padding:10px 16px; font:inherit; font-size:15px; line-height:1.4; cursor:pointer; }
+.guide-primary { background:#146451; color:#fff; border:1px solid #146451; font-weight:700; }
+.guide-primary:hover { background:#0e5141; }
+.guide-secondary { background:#fff; color:#244f41; border:1px solid #bdcfc2; }
+.guide-secondary:hover { background:#f0f5ed; }
+.night-notice { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; background:#faf5e7; border:1px solid #e1d6b7; border-radius:12px; color:#55451f; margin-bottom:8px; }
+.night-notice > svg { margin-top:2px; flex-shrink:0; }
+.night-notice p { margin:0 0 3px; font-size:14px; line-height:1.6; }
+.night-notice small { font-size:12px; color:#635333; line-height:1.5; }
+.night-notice button { display:grid; place-items:center; flex-shrink:0; margin:-8px -9px -8px auto; min-height:44px; min-width:44px; background:transparent; color:#55451f; border:0; border-radius:8px; cursor:pointer; }
+.modal.visit-guide-dialog[open] { display:flex; flex-direction:column; width:560px; max-width:calc(100% - 24px); max-height:calc(100dvh - 32px); overflow:hidden; color:#173f34; border-radius:16px; }
+.visit-guide-dialog .modal-top { flex-shrink:0; padding:9px 18px; color:#325346; }
+.visit-guide-dialog .modal-title { font-size:15px; }
+.visit-guide-dialog .icon-button { min-width:44px; min-height:44px; }
+.guide-progress { display:flex; flex-shrink:0; list-style:none; margin:0; padding:18px 24px 16px; gap:16px; border-bottom:1px solid #e0e8de; }
+.guide-progress li { display:flex; align-items:center; gap:7px; font-size:13px; color:#526957; }
+.guide-progress li span { display:grid; place-items:center; width:24px; height:24px; border:1px solid #acbfaf; border-radius:50%; font-variant-numeric:tabular-nums; }
+.guide-progress li[aria-current] { font-weight:700; color:#146451; }
+.guide-progress li[aria-current] span { background:#146451; color:#fff; border-color:#146451; }
+.guide-scroll { padding:24px; overflow:auto; overscroll-behavior:contain; min-height:0; }
+.guide-scroll h2 { margin:0 0 16px; font-size:25px; line-height:1.4; letter-spacing:-.025em; text-wrap:balance; }
+.guide-scroll h2:focus { outline:none; }
+.guide-scroll p { font-size:16px; line-height:1.75; margin:12px 0; }
+.guide-conditions { margin:20px 0 12px; border-top:1px solid #d7e1d7; }
+.guide-conditions > div { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid #d7e1d7; font-size:15px; }
+.guide-conditions dt { font-weight:700; }
+.guide-conditions dd { margin:0; color:#405f4d; text-align:right; }
+.guide-scroll .guide-note { font-size:14px; color:#486052; line-height:1.65; }
+.guide-footer { padding:16px 24px; border-top:1px solid #dce5d9; background:#fff; flex-shrink:0; }
+.guide-page-actions { display:flex; justify-content:space-between; gap:12px; }
+.guide-browse { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; margin:8px auto 0; padding:8px 12px; color:#146451; background:transparent; border:0; text-decoration:underline; text-underline-offset:4px; font:inherit; font-size:14px; cursor:pointer; }
+.visit-guide-dialog .demo-boundary { display:flex; flex-shrink:0; align-items:flex-start; gap:7px; margin:14px 20px 0; font-size:13px; line-height:1.6; color:#1a5743; background:#eef5e9; padding:10px 12px; border-radius:6px; }
+.demo-boundary svg { flex-shrink:0; margin-top:2px; }
+.demo-gesture { display:flex; align-items:center; gap:20px; padding:18px 0; }
+.demo-gesture svg { flex-shrink:0; }
+.demo-gesture span { color:#486052; font-size:14px; line-height:1.7; }
+.demo-start { width:100%; margin:8px 0; }
+.demo-contact-options { display:flex; flex-direction:column; margin:20px 0 0; gap:8px; }
+.demo-contact-options button { display:flex; align-items:center; gap:14px; width:100%; padding:12px 16px; background:#f8faf5; border:1px solid #cddbc9; border-radius:8px; color:#244f41; text-align:left; cursor:pointer; }
+.demo-contact-options button:hover { background:#edf4e9; }
+.demo-contact-options button span { font-size:14px; line-height:1.5; }
+.demo-contact-options button b { display:block; font-size:25px; font-variant-numeric:tabular-nums; }
+.demo-contact-options button small { margin-left:auto; font-size:13px; color:#486052; }
+.demo-shaken-phone { margin-bottom:12px; animation:demo-shake .65s ease-in-out; }
+.demo-countdown { display:flex; flex-direction:column; align-items:center; gap:4px; padding:16px 0 24px; }
+.demo-countdown strong { font-size:72px; line-height:1.1; color:#146451; font-variant-numeric:tabular-nums; }
+.demo-countdown span { font-size:14px; color:#486052; }
+.demo-actions { display:flex; gap:12px; margin-top:20px; }
+.demo-actions button { flex:1; }
+.help-guide-entry { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:12px 0; margin:2px 0 8px; background:transparent; border:0; border-bottom:1px solid #dce6df; color:#235441; font:inherit; font-size:14px; cursor:pointer; }
+.help-guide-entry svg:last-child { margin-left:auto; }
+.app-visit-notices,.visit-guide-dialog { word-break:keep-all; overflow-wrap:anywhere; }
+.visit-guide-dialog ::selection,.app-visit-notices ::selection { background:#cee6c9; color:#173f34; }
+.visit-guide-dialog :is(button,a):focus-visible,.app-visit-notices button:focus-visible,.help-guide-entry:focus-visible { outline:3px solid #287956; outline-offset:3px; }
+@keyframes demo-shake { 0%,100% { transform:rotate(0); } 15%,55% { transform:rotate(-15deg); } 35%,75% { transform:rotate(15deg); } }
+@media (max-width:600px) {
+  .app-visit-notices { padding:0 8px; margin-top:8px; }
+  .first-visit-prompt { flex-direction:column; align-items:stretch; gap:12px; padding:14px; }
+  .first-visit-actions > button { flex:1; }
+  .night-notice { padding:12px; }
+  .guide-progress { gap:12px; padding:16px; justify-content:space-between; }
+  .guide-progress li { gap:5px; font-size:12px; }
+  .guide-scroll { padding:20px; }
+  .guide-scroll h2 { font-size:23px; }
+  .guide-footer { padding:14px 20px max(14px, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion:reduce) { .demo-shaken-phone { animation:none; } }

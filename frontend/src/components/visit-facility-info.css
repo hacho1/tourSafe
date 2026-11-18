@@ -1,0 +1,10 @@
+.visit-facility-info>p { line-height:1.6; }
+.visit-source-details { margin-top:12px; }
+.visit-source-details>summary { min-height:48px; padding:12px 0; cursor:pointer; color:#286b50; font-weight:600; }
+.visit-details-list { margin:0; display:grid; gap:10px; }
+.visit-details-list>div { border:1px solid #dce5d9; background:#f5f7f2; border-radius:10px; padding:12px; min-width:0; }
+.visit-details-list dt { font-weight:600; color:#183e30; }
+.visit-details-list dd { margin:6px 0 0; line-height:1.65; white-space:pre-line; overflow-wrap:anywhere; }
+.visit-details-list .visit-detail-source { font-size:12px; color:#607466; }
+.visit-detail-source a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.visit-source-details>summary:focus-visible { outline:3px solid #286b50; outline-offset:3px; border-radius:6px; }

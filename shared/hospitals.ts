@@ -30,6 +30,7 @@ export interface Hospital extends Coordinates {
   detailStatus: "OK" | "ERROR" | "UNAVAILABLE";
 }
 export interface HospitalResponse {
+  offlineSnapshotAt?: string;
   mode: "LIVE" | "DEMO";
   status: "OK" | "NOT_CONFIGURED";
   regionId: HospitalRegionId | 'nearby';

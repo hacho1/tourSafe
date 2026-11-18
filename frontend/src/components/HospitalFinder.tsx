@@ -11,6 +11,9 @@ import {
   resolveHospitalDepartment,
 } from "../utils/hospital";
 import "../hospital-finder.css";
+import { useConnection } from '../hooks/useConnection';
+import { useAppServer } from '../hooks/useAppServer';
+import { SnapshotNotice } from './OfflineNotice';
 
 type HospitalLoad = {
   key: string;
@@ -20,6 +23,8 @@ type HospitalLoad = {
 };
 
 export function HospitalFinder({ onClose, origin }: { onClose: () => void; origin?: import('../../../shared/models').Region }) {
+  const online = useConnection();
+  const server = useAppServer();
   const [regionId, setRegionId] = useState<HospitalRegionId>("seongsu");
   const [department, setDepartment] = useState(ALL_DEPARTMENTS);
   const [departmentNotice, setDepartmentNotice] = useState("");
@@ -28,7 +33,7 @@ export function HospitalFinder({ onClose, origin }: { onClose: () => void; origi
   const [load, setLoad] = useState<HospitalLoad | null>(null);
   const gate = useRef(createLatestRequestGate());
   const controller = useRef<AbortController | null>(null);
-  const requestKey = `${origin ? `${origin.lat}:${origin.lng}` : regionId}:${revision}`;
+  const requestKey = `${origin ? `${origin.lat}:${origin.lng}` : regionId}:${revision}:${online}:${server}`;
   const latestKey = useRef(requestKey);
   latestKey.current = requestKey;
   const region = origin ? { ...origin, originName: origin.name } : HOSPITAL_REGIONS.find((item) => item.id === regionId)!;
@@ -96,7 +101,8 @@ export function HospitalFinder({ onClose, origin }: { onClose: () => void; origi
         <span className="hf-demo-badge">DEMO · 예시 자료</span>
         <p>실제 병원이 아닌 가상 예시예요. 전화·지도 연결은 제공하지 않아요.</p>
       </aside>}
-      {data?.mode === "LIVE" && data.status === "OK" && <div className="hf-live"><span>LIVE · 공공데이터</span></div>}
+      {data?.mode === "LIVE" && data.status === "OK" && !data.offlineSnapshotAt && <div className="hf-live"><span>LIVE · 공공데이터</span></div>}
+      <SnapshotNotice at={data?.offlineSnapshotAt} label="의료기관" />
       <div className={`hf-controls ${origin ? 'hf-nearby-controls' : ''}`}>
         {!origin && <label className="hf-region-label">조회 지역
           <select value={regionId} onChange={(event) => chooseRegion(event.target.value as HospitalRegionId)}>

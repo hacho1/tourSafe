@@ -7,15 +7,24 @@
     "node": ">=22"
   },
   "scripts": {
+    "import:tourism": "tsx scripts/import-tourism-standard.ts",
     "geocode:toilets:national": "tsx scripts/geocode-toilets-national.ts",
     "geocode:toilets": "tsx scripts/geocode-toilets.ts",
     "import:data": "tsx scripts/import-public-data.ts",
     "dev": "concurrently -k -n API,WEB -c green,blue \"tsx watch backend/src/index.ts\" \"vite --config frontend/vite.config.ts\"",
     "build": "tsc -p backend/tsconfig.json && tsc -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts",
     "start": "node dist/backend/src/index.js",
-    "test": "tsx --test backend/src/utils/core.test.ts backend/src/adapters/adapters.test.ts tests/shake.test.ts tests/nearby.test.ts tests/hospitals.test.ts tests/hospital-ui.test.ts tests/emergency.test.ts tests/search-location.test.ts tests/saved-places.test.ts tests/hospital-recovery.test.ts tests/modal-lock.test.ts tests/tour-live.test.ts tests/public-data.test.ts tests/help-location.test.ts tests/map-layers.test.ts tests/toilet-geocoding.test.ts"
+    "test": "tsx --test backend/src/utils/core.test.ts backend/src/adapters/adapters.test.ts tests/shake.test.ts tests/nearby.test.ts tests/hospitals.test.ts tests/hospital-ui.test.ts tests/emergency.test.ts tests/search-location.test.ts tests/saved-places.test.ts tests/hospital-recovery.test.ts tests/modal-lock.test.ts tests/tour-live.test.ts tests/public-data.test.ts tests/help-location.test.ts tests/map-layers.test.ts tests/toilet-geocoding.test.ts tests/visit-facilities.test.ts tests/suitability.test.ts tests/visit-guidance.test.ts tests/visit-plans.test.ts tests/visit-question-draft.test.ts tests/help-handoff.test.ts tests/offline.test.ts tests/android-app.test.ts",
+    "build:android:web": "tsc -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts --mode android",
+    "android:sync": "npm run build:android:web && cap sync android",
+    "android:apk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-android.ps1"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/geolocation": "8.2.4",
+    "@capacitor/network": "8.0.1",
     "csv-parse": "^7.0.3",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -26,6 +35,7 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.2",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",

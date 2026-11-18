@@ -104,6 +104,13 @@ export async function getImportedTouristInfo(center: Coordinates): Promise<Suppo
   return (await getPublicFacilities(center, 5000)).facilities.filter(row => row.type === 'TOURIST_INFO').slice(0, 3)
     .map(row => ({ ...row, type: 'TOURIST_INFO', distanceType: 'STRAIGHT_LINE', holidays: null, languages: null, emergency: null }));
 }
+/** Nearby facilities remain separate from a tourist site's own amenities. */
+export async function getImportedToilets(center: Coordinates, dataRoot?: string): Promise<SupportFacility[]> {
+  return (await getPublicFacilities(center, 3000, '', dataRoot)).facilities.filter(row => row.type === 'TOILET').slice(0, 3)
+    .map(row => ({ ...row, type: 'TOILET' as const, distanceType: 'STRAIGHT_LINE' as const, holidays: null, languages: null, emergency: null,
+      ...(row.addressLocation ? { locationNote: '주소 기준 위치 · 실제 화장실 입구와 다를 수 있어요.' } : {}),
+    }));
+}
 
 export function searchToiletAddressRows(rows: PublicFacilityRecord[], query: string, offset: number) {
   const normalize = (text: string) => text.normalize('NFKC').replace(/\s+/g, '').toLowerCase();

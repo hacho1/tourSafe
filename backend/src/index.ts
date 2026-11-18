@@ -19,10 +19,15 @@ const client = fileURLToPath(
   new URL("../../../frontend/dist/", import.meta.url),
 );
 if (existsSync(client)) {
-  app.use(express.static(client));
-  app.get("/{*path}", (_req, res) =>
-    res.sendFile("index.html", { root: client }),
-  );
+  app.use(express.static(client, {
+    setHeaders(res, path) {
+      if (path.endsWith('index.html') || path.endsWith('sw.js')) res.setHeader('Cache-Control', 'no-cache');
+    },
+  }));
+  app.get("/{*path}", (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile("index.html", { root: client });
+  });
 }
 const errors: ErrorRequestHandler = (_error, _req, res, _next) => {
   res

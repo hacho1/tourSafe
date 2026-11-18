@@ -1,5 +1,7 @@
 import { SavedPlacesPanel } from './components/SavedPlacesPanel';
+import { CandidateComparison } from './components/CandidateComparison';
 import type { HelpLocation } from './utils/helpLocation';
+import type { NearbyHelpAction } from './utils/nearbyHelp';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -25,7 +27,8 @@ import type {
   Region,
   SearchOptions,
 } from "../../shared/models";
-import { recommendationOrder } from "../../shared/order";
+import { suitabilityOrder } from "./utils/suitability";
+import { useTravelNeeds } from "./hooks/useTravelNeeds";
 import { SearchPanel } from "./components/SearchPanel";
 import { SpotCard } from "./components/SpotCard";
 import { MapPanel, type MapPoint } from "./components/MapPanel";
@@ -36,11 +39,19 @@ import { SpotDetail } from "./pages/SpotDetail";
 import { useRecommendations } from "./hooks/useRecommendations";
 import { useSavedPlaces } from "./hooks/useSavedPlaces";
 import { useClock } from "./hooks/useClock";
+import { SnapshotNotice } from './components/OfflineNotice';
 import { DEFAULT_REGION } from "./config/constants";
 import { distance, timeLabel } from "./utils/format";
 
 type Filter = "all" | "outdoor" | "indoor" | "saved";
-export function ExploreApp({ location, onLocation, active, savedView, onMap, onBrowse, onSaved, onEmergency }: { location: HelpLocation; onLocation: (location: HelpLocation) => void; active: boolean; savedView: boolean; onMap: () => void; onBrowse: () => void; onSaved: () => void; onEmergency: () => void }) {
+export function ExploreApp({ location, onLocation, active, savedView, onMap, onBrowse, onSaved, onEmergency, savedPlanRequest, onOpenSavedPlan, onNearbyHelp }: { location: HelpLocation; onLocation: (location: HelpLocation) => void; active: boolean; savedView: boolean; onMap: () => void; onBrowse: () => void; onSaved: () => void; onEmergency: () => void; savedPlanRequest: { placeId: string; requestId: number } | null; onOpenSavedPlan: (placeId: string) => void; onNearbyHelp: NearbyHelpAction }) {
+  const [needs] = useTravelNeeds();
+  const [savedVisited, setSavedVisited] = useState(savedView);
+  useEffect(() => { if (savedView) setSavedVisited(true); }, [savedView]);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [compareMessage, setCompareMessage] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState(false);
   const [region, setRegion] = useState<Region>(location),
     [appliedRegion, setAppliedRegion] = useState<Region>(location);
   const [radius, setRadius] = useState(3000),
@@ -57,7 +68,8 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
     [about, setAbout] = useState(false);
   const filter: Filter = savedView ? "saved" : browseFilter;
   const previousSearch = useRef<{ options: SearchOptions; region: Region } | null>(null);
-  useEffect(() => { if (!active) { setSelected(null); setAbout(false); } }, [active]);
+  useEffect(() => { if (!active) { setSelected(null); setAbout(false); setComparisonOpen(false); } }, [active]);
+  useEffect(() => { setCompareIds([]); setComparisonOpen(false); setCompareMessage(''); }, [options.lat, options.lng, options.radius, options.withKids]);
   useEffect(() => {
     setRegion(location); setAppliedRegion(location); setFilter('all');
     setOptions(previous => ({ ...previous, lat: location.lat, lng: location.lng }));
@@ -72,6 +84,16 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
   const demo = data?.mode === "DEMO",
     first = data?.recommendations[0];
   const hasClassification = Boolean(data?.recommendations.some(row => row.spot.indoor !== null));
+  const comparisonItems = (data?.recommendations || []).filter(item => compareIds.includes(item.spot.id));
+  useEffect(() => { if (savedView) { setComparisonOpen(false); setSelected(null); } }, [savedView]);
+  useEffect(() => {
+    if (!loading && !error && data) setCompareIds(ids => ids.filter(id => data.recommendations.some(item => item.spot.id === id)));
+  }, [data, loading, error]);
+  function toggleCompare(id: string) {
+    if (compareIds.includes(id)) { setCompareIds(compareIds.filter(value => value !== id)); setCompareMessage(''); }
+    else if (compareIds.length < 2) { setCompareIds([...compareIds,id]); setCompareMessage(''); }
+    else setCompareMessage('한 번에 두 후보를 비교해요. 담은 후보를 해제한 뒤 다른 곳을 골라 주세요.');
+  }
   useEffect(() => { if (!loading && !hasClassification) setFilter('all'); }, [loading, hasClassification]);
   const results = useMemo(() => {
     const rows = (data?.recommendations || []).filter(
@@ -86,9 +108,9 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
         ? a.spot.distanceMeters - b.spot.distanceMeters
         : sort === "confidence"
           ? b.score.coverage - a.score.coverage
-          : recommendationOrder(a, b),
+          : suitabilityOrder(a, b, needs),
     );
-  }, [data, filter, saved.ids, sort]);
+  }, [data, filter, saved.ids, sort, needs]);
   const mapPoints = useMemo<MapPoint[]>(
     () =>
       results.map(({ spot }) => ({
@@ -103,9 +125,9 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
   function search() {
     onBrowse();
     setAppliedRegion(region);
-    onLocation({ ...region, kind: region.lat === location.lat && region.lng === location.lng ? location.kind : 'manual' });
+    onLocation(region.lat === location.lat && region.lng === location.lng ? { ...location, ...region } : { ...region, kind: 'manual' });
     setFilter("all");
-    setSort(withKids ? "recommended" : "distance");
+    setSort("recommended");
     const next = { lat: region.lat, lng: region.lng, radius, withKids };
     if (
       Object.entries(next).every(
@@ -178,14 +200,14 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               FOR YOUR LITTLE ADVENTURES
             </div>
             <h1>
-              가족의 하루에,
+              나에게 맞는 여행,
               <br />
-              <span>조금 더 안심을.</span>
+              <span>필요한 도움과 함께.</span>
             </h1>
             <p>
               오늘의 날씨부터 가까운 지원시설까지.
               <br />
-              아이와 함께할 다음 나들이를 찾아보세요.
+              필요한 환경에 맞는 다음 여행지를 찾아보세요.
             </p>
             <div className="hero-tags">
               <span>
@@ -290,7 +312,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               <h2>
                 {filter === "saved"
                   ? "다음에 함께 가고 싶은 곳"
-                  : "가까운 곳에서 만나는 작은 여행"}
+                  : "방문 후보를 비교해 보세요"}
                 <span className="result-count">
                   {savedView ? saved.ids.length : loading ? "…" : results.length}
                 </span>
@@ -350,7 +372,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
               >
-                <option value="recommended">추천순</option>
+                <option value="recommended">필수조건 우선</option>
                 <option value="distance">가까운순</option>
                 <option value="confidence">정보 확인율순</option>
               </select>
@@ -358,6 +380,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             </label>
           </div>
           {!loading && !hasClassification && !savedView && <p id="classification-note" className="nearby-range">제공 자료에 실내·야외 분류가 없어 전체 장소로 표시해요.</p>}
+          {!savedView && <div className="candidate-flow-note"><p><strong>내 조건 확인 → 두 후보 비교 → 가족 준비 카드 저장</strong></p><p>{appliedRegion.name} 기준 {options.radius/1000}km의 조회 후보 중 최대 8곳이에요. 자료가 없는 항목과 원문 해석이 필요한 항목을 구분해 보세요.</p></div>}
           {!loading && demo && (
             <div className="demo-banner">
               <span className="demo-badge">DEMO</span>
@@ -372,7 +395,8 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               </button>
             </div>
           )}
-          {!loading && data?.mode === "LIVE" && data.statuses.some(status => status.key === "tour" && status.status === "OK") && <div className="demo-banner"><span className="demo-badge">LIVE</span><span>한국관광공사 실제 관광정보 · 운영시간과 현장 상황은 방문 전 확인해 주세요.</span></div>}
+          {!loading && data?.mode === "LIVE" && !data.offlineSnapshotAt && data.statuses.some(status => status.key === "tour" && status.status === "OK") && <div className="demo-banner"><span className="demo-badge">LIVE</span><span>한국관광공사 실제 관광정보 · 운영시간과 현장 상황은 방문 전 확인해 주세요.</span></div>}
+          <SnapshotNotice at={data?.offlineSnapshotAt} label="방문 후보" />
           {!loading &&
             data?.statuses
               .filter(
@@ -384,7 +408,8 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
                   {s.message}
                 </div>
               ))}
-          {savedView ? <SavedPlacesPanel current={data?.recommendations || []} /> : loading ? (
+          {(savedView || savedVisited) && <div hidden={!savedView}><SavedPlacesPanel active={savedView} current={data?.recommendations || []} openPlanRequest={savedView ? savedPlanRequest : null} onNearbyHelp={onNearbyHelp} /></div>}
+          {savedView ? null : loading ? (
             <>
               <p className="loading-label" role="status">
                 주변 장소와 방문 조건을 확인하고 있어요. 공공시설 첫 조회는 잠시
@@ -413,15 +438,18 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             </div>
           ) : results.length ? (
             view === "list" ? (
-              <div className="cards-grid">
+              <div className={`cards-grid ${comparisonItems.length ? 'with-comparison-tray' : ''}`}>
                 {results.map((item, index) => (
                   <SpotCard
                     key={item.spot.id}
                     item={item}
                     saved={saved.ids.includes(item.spot.id)}
                     onSave={() => saved.toggle(item.spot)}
-                    onOpen={() => setSelected(item)}
+                    onOpen={() => { setSelectedPlan(false); setSelected(item); }}
                     index={index}
+                    comparing={compareIds.includes(item.spot.id)}
+                    onCompare={() => toggleCompare(item.spot.id)}
+                    onPlan={() => { setSelectedPlan(true); setSelected(item); }}
                   />
                 ))}
               </div>
@@ -431,12 +459,12 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
                   points={mapPoints}
                   demo={!!demo}
                   onSelect={(id) =>
-                    setSelected(results.find((r) => r.spot.id === id) || null)
+                    { setSelectedPlan(false); setSelected(results.find((r) => r.spot.id === id) || null); }
                   }
                 />
                 <div className="overview-list">
                   {results.map((r) => (
-                    <button key={r.spot.id} onClick={() => setSelected(r)}>
+                    <button key={r.spot.id} onClick={() => { setSelectedPlan(false); setSelected(r); }}>
                       <MapPin size={17} />
                       <span>
                         {r.spot.name}
@@ -504,10 +532,10 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             <ShieldCheck size={30} />
           </span>
           <div>
-            <h3>점수보다 중요한 건, 추천의 이유.</h3>
+            <h3>필요한 조건과 확인할 정보를 함께.</h3>
             <p>
               공공데이터의 출처와 미확인 정보를 함께 보여드려요.
-              <br className="mobile-only" /> 우리 가족에게 맞는 여행을 직접
+              <br className="mobile-only" /> 나에게 맞는 여행을 직접
               판단해 보세요.
             </p>
           </div>
@@ -521,7 +549,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             <ShieldCheck size={18} />
             TourSafe
           </a>
-          <p>우리 가족의 다음 나들이를 위한 작은 가이드.</p>
+          <p>나에게 필요한 여행 정보를 찾는 작은 가이드.</p>
           <span>© 2026 TourSafe · University prototype</span>
         </footer>
       </main>
@@ -531,9 +559,13 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
           saved={saved.ids.includes(selected.spot.id)}
           onSave={() => saved.toggle(selected.spot)}
           onClose={() => setSelected(null)}
+          focusPlan={selectedPlan}
+          onOpenSavedPlan={onOpenSavedPlan}
         />
       )}
       {about && <AboutDialog onClose={() => setAbout(false)} />}
+      {!savedView && active && comparisonItems.length > 0 && <aside className="candidate-comparison-tray" aria-label="비교할 방문 후보"><div><strong>비교 후보 {comparisonItems.length}/2</strong><span>{comparisonItems.map(item => item.spot.name).join(' · ')}</span>{compareMessage && <p role="status">{compareMessage}</p>}</div><button type="button" className="primary" disabled={comparisonItems.length !== 2 || loading || Boolean(error)} onClick={() => setComparisonOpen(true)}>두 후보 비교</button><button type="button" className="secondary" aria-label="비교 후보 비우기" onClick={() => { setCompareIds([]); setComparisonOpen(false); setCompareMessage(''); }}>비우기</button></aside>}
+      {comparisonOpen && active && !savedView && comparisonItems.length === 2 && <CandidateComparison items={comparisonItems} scope={`${appliedRegion.name} ${options.radius/1000}km`} onClose={() => setComparisonOpen(false)} onOpen={item => { setComparisonOpen(false); setSelectedPlan(true); setSelected(item); }} />}
     </>
   );
 }

@@ -1,0 +1,10 @@
+{
+  "appId": "kr.toursafe.app",
+  "appName": "TourSafe",
+  "webDir": "frontend/dist-android",
+  "server": { "androidScheme": "https" },
+  "android": { "backgroundColor": "#f7f8f4", "allowMixedContent": false },
+  "plugins": {
+    "SystemBars": { "insetsHandling": "native", "initialViewportFitValueHint": "contain", "style": "LIGHT" }
+  }
+}

@@ -1,4 +1,5 @@
 import type { TouristSpot } from '../../../shared/models';
+import { removeVisitPlan } from './visitPlans';
 export type SavedPlaceIdentity = Pick<TouristSpot, 'id' | 'name' | 'address' | 'phone' | 'lat' | 'lng' | 'source'>;
 export type SavedPlace = SavedPlaceIdentity & { savedAt: string };
 export const SAVED_PLACES_KEY = "toursafe-saved";
@@ -9,6 +10,8 @@ export const SAVED_PLACES_SAVE_ERROR =
   "장소를 저장하지 못했습니다. 브라우저 저장 공간과 설정을 확인한 뒤 다시 시도해 주세요.";
 export const SAVED_PLACES_REMOVE_ERROR =
   "장소 저장을 해제하지 못했습니다. 브라우저 저장소 설정을 확인한 뒤 다시 시도해 주세요.";
+export const SAVED_PLACES_PLAN_REMOVE_ERROR =
+  "장소 저장은 해제했지만 방문 확인 질문을 지우지 못해 질문이 남아 있습니다. 브라우저 저장소 설정을 확인해 주세요.";
 
 export interface SavedPlacesSnapshot {
   ids: string[];
@@ -107,19 +110,19 @@ export function createSavedPlacesStore(
         }
       };
     },
-    toggle(place: string | SavedPlaceIdentity, mode: 'toggle' | 'refresh' = 'toggle') {
-      if (typeof place !== 'string' && (!place || typeof place.name !== 'string' || !Number.isFinite(place.lat) || !Number.isFinite(place.lng) || !['PUBLIC_DATA', 'KAKAO_MAP', 'DEMO_DATA'].includes(place.source?.kind))) return;
+    toggle(place: string | SavedPlaceIdentity, mode: 'toggle' | 'refresh' = 'toggle'): boolean {
+      if (typeof place !== 'string' && (!place || typeof place.name !== 'string' || !Number.isFinite(place.lat) || !Number.isFinite(place.lng) || !['PUBLIC_DATA', 'KAKAO_MAP', 'DEMO_DATA'].includes(place.source?.kind))) return false;
       const id = typeof place === 'string' ? place : place.id;
-      if (typeof id !== "string" || !id.trim()) return;
+      if (typeof id !== "string" || !id.trim()) return false;
       let current: ReturnType<typeof read>;
       try {
         // Read before writing so an intervening cross-tab change is preserved.
         current = read();
       } catch {
         publish(snapshot.ids, SAVED_PLACES_READ_ERROR);
-        return;
+        return false;
       }
-      if (mode === 'refresh' && !current.ids.includes(id)) return;
+      if (mode === 'refresh' && !current.ids.includes(id)) return false;
       const removing = mode === 'toggle' && current.ids.includes(id);
       const next = mode === 'refresh' ? current.ids : removing
         ? current.ids.filter((savedId) => savedId !== id)
@@ -134,9 +137,22 @@ export function createSavedPlacesStore(
         current.storage.setItem(SAVED_PLACES_KEY, JSON.stringify(Object.keys(places).length ? { version: 2, ids: next, places } : next));
       } catch {
         publish(snapshot.ids, removing ? SAVED_PLACES_REMOVE_ERROR : SAVED_PLACES_SAVE_ERROR);
-        return;
+        return false;
+      }
+      let planRemovalFailed = false;
+      for (const removedId of current.ids.filter(savedId => !next.includes(savedId))) {
+        try {
+          removeVisitPlan(current.storage, removedId);
+        } catch {
+          planRemovalFailed = true;
+        }
+      }
+      if (planRemovalFailed) {
+        publish(next, SAVED_PLACES_PLAN_REMOVE_ERROR, places);
+        return false;
       }
       publish(next, "", places);
+      return true;
     },
     clearError() {
       publish(snapshot.ids, "");

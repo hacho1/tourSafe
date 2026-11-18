@@ -30,6 +30,8 @@ export interface SupportFacility extends Coordinates {
   holidays: string | null;
   languages: string | null;
   emergency: boolean | null;
+  locationNote?: string;
+  addressLocation?: import('./mapFacilities.js').AddressLocation;
 }
 export interface WeatherInfo {
   temperature: Evidence<number>;
@@ -67,7 +69,19 @@ export interface TouristSpot extends Coordinates {
   openNow: Evidence<boolean>;
   closure: Evidence<boolean>;
   safety: SafetyEnvironment;
+  visitDetails?: VisitFacilityDetail[];
   distanceMeters: number;
+}
+export interface VisitFacilityDetail {
+  id: string;
+  label: string;
+  text: string;
+  source: DataSource;
+  updatedAt: string | null;
+}
+export interface PlaceAmenities {
+  safety: Partial<SafetyEnvironment>;
+  details: VisitFacilityDetail[];
 }
 export interface ScoreComponent {
   key: string;
@@ -92,6 +106,7 @@ export interface AdapterStatus {
   message: string;
 }
 export interface Recommendation {
+  offlineSnapshotAt?: string;
   checkedAt?: string;
   spot: TouristSpot;
   facilities: SupportFacility[];
@@ -100,6 +115,7 @@ export interface Recommendation {
   statuses: AdapterStatus[];
 }
 export interface SearchResponse {
+  offlineSnapshotAt?: string;
   mode: "LIVE" | "DEMO";
   generatedAt: string;
   origin: Coordinates;

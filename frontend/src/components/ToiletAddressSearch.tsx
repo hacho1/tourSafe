@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { appFetch } from '../services/appFetch';
 import type { PublicFacilityRecord } from '../../../shared/mapFacilities';
 
 interface Results { total: number; items: PublicFacilityRecord[]; nextOffset: number | null }
@@ -12,7 +13,7 @@ export function ToiletAddressSearch() {
     const controller = new AbortController(); request.current = controller;
     setBusy(true); setError(''); if (!offset) { setData(null); setApplied(text); }
     try {
-      const response = await fetch(`/api/toilet-addresses?${new URLSearchParams({q:text,offset:String(offset)})}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) });
+      const response = await appFetch(`/api/toilet-addresses?${new URLSearchParams({q:text,offset:String(offset)})}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) });
       if (!response.ok) throw new Error();
       const result = await response.json() as Results;
       if (!controller.signal.aborted) setData(previous => ({ ...result, items: offset ? [...(previous?.items || []), ...result.items] : result.items }));

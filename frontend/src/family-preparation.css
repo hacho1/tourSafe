@@ -1,0 +1,82 @@
+.detail-dialog[open] { height:calc(100dvh - 38px); }
+.detail-dialog > .detail-scroll { flex:1 1 0; min-height:0; scroll-padding-block:20px; }
+.detail-dialog > .detail-bottom { position:relative; flex:0 0 auto; }
+.detail-dialog .detail-plan-actions { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; }
+.detail-dialog .detail-plan-actions :is(button,a) { min-height:44px; font-size:14px; }
+.detail-dialog .detail-plan-actions .primary { min-width:0; padding:10px 12px; }
+.detail-dialog .detail-plan-actions > a.primary,.detail-dialog .detail-plan-actions > button.primary:not(.detail-plan-save) { color:#205d46; background:#fff; border:1px solid #b8cbb6; }
+.detail-plan-actions .emergency-link { padding:6px; color:#704c35; }
+.detail-plan-actions .emergency-link strong { color:#704c35; font-size:14px; }
+.detail-plan-actions .primary svg { display:none; }
+.family-preparation { color:#224936; font-size:15px; line-height:1.65; overflow-wrap:anywhere; word-break:keep-all; }
+.family-preparation > h3 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:23px; line-height:1.4; color:#174b37; }
+.family-preparation :is(h3,h4,h5) { text-wrap:balance; }
+.family-preparation :is(p,ul,dl) { max-width:70ch; }
+.family-preparation p { font-size:15px; line-height:1.65; margin:8px 0 14px; }
+.family-preparation small,.family-preparation p.family-small { display:block; color:#425d49; font-size:13px; line-height:1.65; }
+.family-card-section { padding:22px 0 0; margin:22px 0 0; border-top:1px solid #cfddcc; }
+.family-card-section > h4,.family-section-heading h4 { font-size:18px; line-height:1.5; margin:0 0 8px; }
+.family-section-heading { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; }
+.family-section-heading h4 { flex:1; }
+.family-preparation .needs-button { min-height:44px; font-size:14px; white-space:nowrap; }
+.family-support-jump { display:inline-flex; align-items:center; min-height:44px; padding:9px 12px; border:1px solid #b8cbb6; border-radius:8px; font:inherit; font-size:14px; background:#fff; color:#1e5941; cursor:pointer; }
+.family-support-jump:hover { background:#eef5e8; }
+.family-support > h4 { scroll-margin-top:90px; }
+.family-required-checks { margin:18px 0; padding:14px; background:#fff4e4; color:#70431e; border-radius:8px; }
+.family-required-checks p { margin:7px 0 0; font-size:14px; }
+.family-question-link { display:inline-flex; align-items:center; min-height:44px; padding:9px 12px; border:1px solid #b8cbb6; border-radius:8px; background:#fff; color:#1e5941; font:inherit; font-size:14px; cursor:pointer; }
+.family-question-link:hover { background:#eef5e8; }
+.saved-nearby-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; padding-top:14px; border-top:1px solid #cbdac8; color:#224936; }
+.saved-nearby-actions p { flex-basis:100%; margin:0 0 5px; font-size:14px; line-height:1.65; }
+.saved-nearby-actions button { display:inline-flex; justify-content:center; align-items:center; flex:1 1 130px; min-height:44px; margin:0; padding:10px 12px; border:1px solid #b8cbb6; border-radius:8px; background:#fff; color:#1e5941; font:inherit; font-size:14px; cursor:pointer; }
+.saved-nearby-actions button:hover { background:#eef5e8; }
+.saved-nearby-actions button:disabled { background:#e6ece1; color:#51624e; cursor:default; }
+.saved-nearby-actions button:focus-visible { outline:3px solid #2b7652; outline-offset:3px; }
+.facility-location-evidence { margin:10px 0; color:#365844; }
+.facility-location-evidence summary { min-height:44px; padding:10px 0; font-size:14px; cursor:pointer; }
+.facility-location-evidence p { font-size:14px; line-height:1.65; margin:8px 0; }
+.facility-location-evidence summary:focus-visible { outline:3px solid #2b7652; outline-offset:3px; }
+.facility-card-top .address-reference-label,.nearby-row .address-reference-label { max-width:150px; white-space:normal; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.visit-plan-editor .confirmation-note-template { margin-bottom:12px; }
+.family-needs-list { list-style:none; padding:0; margin:10px 0; display:flex; flex-wrap:wrap; gap:8px 16px; }
+.family-needs-list li { font-size:14px; }
+.family-needs-list span { font-weight:700; margin-right:6px; color:#215b40; }
+.family-evidence-list { list-style:none; padding:0; margin:16px 0; }
+.family-evidence-list > li { padding:14px 0; border-bottom:1px solid #dbe5d7; }
+.family-evidence-label { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; }
+.family-evidence-label strong { font-size:14px; }
+.family-unmet { color:#883c20; }
+.family-preparation summary { min-height:44px; padding:10px 0; cursor:pointer; font-size:14px; }
+.family-preparation details p { margin-top:4px; }
+.family-preparation a { text-decoration:underline; text-underline-offset:4px; color:#1d6044; }
+.family-preparation details a { display:inline-flex; align-items:center; min-height:44px; }
+.family-preparation .family-empty,.family-preparation .family-limit { padding:12px 14px; background:#f0f5e9; border-radius:8px; font-size:14px; }
+.family-preparation .family-limit p { margin-bottom:0; }
+.family-preparation .visit-plan-editor { margin-bottom:0; }
+.family-preparation .visit-plan-heading { font-size:18px; }
+.visit-plan-undo { margin-left:8px; }
+.visit-plan-success { margin:14px 0; padding:12px 14px; background:#eef6e8; border-radius:8px; }
+.visit-plan-editor .visit-plan-success button { font-weight:700; border-color:#3d7953; }
+.family-support-row { padding:18px 0; border-bottom:1px solid #dbe5d7; }
+.family-support-row h5 { display:flex; align-items:center; gap:8px; font-size:16px; margin:0 0 12px; }
+.family-support-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.family-support-actions :is(button,a) { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border:1px solid #b8cbb6; background:#fff; border-radius:8px; padding:8px 12px; font:inherit; font-size:14px; cursor:pointer; color:#1e5941; }
+.family-support-actions button:hover,.family-support-actions a:hover { background:#eef5e8; }
+.family-weather dl { margin:0; }
+.family-weather dl > div { display:grid; grid-template-columns:90px minmax(0,1fr); gap:8px; padding:10px 0; }
+.family-weather dt { font-weight:600; }
+.family-weather dd { margin:0; }
+.saved-place-entry { scroll-margin-block:100px 90px; }
+.saved-place-entry > h3:focus { outline:3px solid #2b7652; outline-offset:4px; }
+.saved-visit-plan > .visit-plan-help { font-size:14px; line-height:1.65; color:#425d49; }
+:is(.family-preparation,.detail-plan-actions,.visit-plan-editor) :is(button,a,summary,textarea):focus-visible { outline:3px solid #2b7652; outline-offset:3px; }
+.family-preparation ::selection { background:#cde6c7; color:#173b2c; }
+@media (max-width:600px) {
+  .detail-dialog[open] { height:100dvh; max-height:100dvh; }
+  .detail-dialog .detail-plan-actions { gap:6px; padding-inline:14px; }
+  .detail-dialog .detail-plan-actions .primary { padding-inline:10px; }
+  .family-preparation > h3 { font-size:21px; }
+  .family-preparation .family-intro { font-size:15px; }
+  .family-evidence-label { align-items:flex-start; flex-direction:column; gap:4px; }
+  .visit-plan-undo { margin:8px 0 0; }
+}

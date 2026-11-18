@@ -1,8 +1,9 @@
+import { deviceLocation } from '../services/deviceLocation';
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, CircleAlert, Clock3, Hospital, LocateFixed, LoaderCircle, MapPin, RefreshCw } from "lucide-react";
 import type { Coordinates, DataSource, Recommendation, SearchResponse } from "../../../shared/models";
 import { Modal } from "./Modal";
-import { DEFAULT_REGION, scoreSummary } from "../config/constants";
+import { DEFAULT_REGION } from "../config/constants";
 import { searchPlaces } from "../services/api";
 import { distance } from "../utils/format";
 import { createLatestRequestGate, nearbyEvidenceText, NEARBY_RADIUS, selectNearbyMedical, selectNearbyPlace } from "../utils/nearby";
@@ -100,7 +101,8 @@ export function NearbyScore({ onClose, origin, onOrigin, onOpenPlace, onOpenHosp
   }
   function locate() {
     if (!canLocate || locating) return;
-    if (!navigator.geolocation) {
+    const geo = deviceLocation();
+    if (!geo) {
       setLocationMessage("이 환경에서는 현재 위치를 확인할 수 없어요. 기존 조회 기준을 유지했어요.");
       return;
     }
@@ -109,7 +111,7 @@ export function NearbyScore({ onClose, origin, onOrigin, onOpenPlace, onOpenHosp
     const valid = () => locationGate.current.isCurrent(ticket) && currentKey.current === key;
     setLocating(true);
     setLocationMessage("");
-    navigator.geolocation.getCurrentPosition((position) => {
+    geo.getCurrentPosition((position) => {
       if (!valid()) return;
       setLocating(false);
       const { latitude: nextLat, longitude: nextLng } = position.coords;
@@ -250,15 +252,9 @@ export function NearbyScore({ onClose, origin, onOrigin, onOpenPlace, onOpenHosp
         </div>
         <p className="sm-source-note">자료 기준 시각 이후 운영·시설 상태가 달라졌을 수 있어요.</p>
         <details className="sm-nearby-calculation">
-          <summary>방문 조건 계산 보기</summary>
-          <p>{demo ? "예시 방문 조건 점수" : "방문 조건 점수"}: {scoreSummary(show.score).total ?? "확인 정보 부족"}{scoreSummary(show.score).total !== null && " / 100"} · 가중 확인율 {show.score.coverage}%</p>
-          <p className="sm-source-note">획득 점수 ÷ 확인된 배점 × 100으로 계산해요. 확인율은 전체 배점 중 정보가 확인된 배점의 비율이며, 안전할 확률이나 모든 정보의 확인 여부가 아니에요.</p>
-          <div className="sm-score-evidence">{show.score.components.map((part) => <div key={part.key}>
-            <span><b>{part.label}</b><small>{["medical", "police", "tourist_info"].includes(part.key)
-              ? part.detail.replace("· 직선", "· 이 장소에서 직선") : part.detail}</small></span>
-            <strong>{part.earnedPoints === null ? "미확인" : `${part.earnedPoints} / ${part.maxPoints}`}</strong>
-          </div>)}</div>
-          <p className="sm-source-note">미확인 정보는 계산에서 제외해요. 확인된 ‘없음’은 ‘미확인’과 구분해 계산해요.</p>
+          <summary>정보 확인 범위</summary>
+          <p>기존 항목 정보 확인율 {show.score.coverage}% · 데이터 정확도나 안전 확률이 아니에요.</p>
+          <p>관광안내소는 관광 정보와 비긴급 도움을 제공하는 관광지원시설이며 응급 구조기관이 아니에요. 관광안내·통역은 1330으로 문의할 수 있어요.</p>
         </details>
       </>}
 

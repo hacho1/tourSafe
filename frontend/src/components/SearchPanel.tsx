@@ -1,16 +1,17 @@
+import { deviceLocation } from '../services/deviceLocation';
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
   ChevronDown,
   LocateFixed,
   MapPin,
   Search,
-  UsersRound,
   LoaderCircle,
   ArrowRight,
   CircleAlert,
 } from "lucide-react";
 import type { Region } from "../../../shared/models";
 import { Modal } from "./Modal";
+import { TravelNeedsSettings } from "./TravelNeeds";
 import { searchRegions } from "../services/api";
 import { DEFAULT_REGION } from "../config/constants";
 import { createSearchLocationController } from "../utils/searchLocation";
@@ -33,8 +34,6 @@ export function SearchPanel({
   onRegion,
   radius,
   onRadius,
-  withKids,
-  onKids,
   loading,
   onSearch,
   active = true,
@@ -67,7 +66,7 @@ export function SearchPanel({
     setLocating(true);
     setMessage("");
     locationRequest.request(
-      navigator.geolocation,
+      deviceLocation(),
       (confirmedRegion) => {
         setLocating(false);
         onRegion(confirmedRegion);
@@ -103,25 +102,7 @@ export function SearchPanel({
             {region.address || "선택한 위치"}
           </span>
         </div>
-        <div className="search-family">
-          <div>
-            <span className="field-label">누구와 함께</span>
-            <span className="family-label">
-              <UsersRound size={18} />
-              아이와 함께
-            </span>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-label="아이와 함께"
-            aria-checked={withKids}
-            className={`switch ${withKids ? "on" : ""}`}
-            onClick={() => onKids(!withKids)}
-          >
-            <span />
-          </button>
-        </div>
+        <div className="search-family"><TravelNeedsSettings /></div>
         <fieldset className="search-radius">
           <legend className="field-label">얼마나 가까운 곳으로 갈까요?</legend>
           <div className="radius-options">

@@ -5,7 +5,7 @@ import type { MapPoint } from '../components/MapPanel';
 export type MapLayer = 'CCTV' | 'POLICE' | 'MEDICAL' | 'TOILET';
 export type MapLayers = Record<MapLayer, boolean>;
 export const MAP_LAYER_STORAGE = 'toursafe:map-layers:v1';
-export const DEFAULT_MAP_LAYERS: MapLayers = { CCTV: true, POLICE: true, MEDICAL: true, TOILET: false };
+export const DEFAULT_MAP_LAYERS: MapLayers = { CCTV: false, POLICE: true, MEDICAL: true, TOILET: false };
 export function parseMapLayers(value: string | null): MapLayers {
   try {
     const parsed: unknown = value ? JSON.parse(value) : null;
@@ -15,11 +15,14 @@ export function parseMapLayers(value: string | null): MapLayers {
         return { CCTV: row.CCTV as boolean, POLICE: row.POLICE as boolean, MEDICAL: row.MEDICAL as boolean, TOILET: typeof row.TOILET === 'boolean' ? row.TOILET : false };
       }
     }
-  } catch { /* Unavailable or old preferences must not hide facilities. */ }
+  } catch { /* Unavailable or old preferences fall back to the defaults. */ }
   return { ...DEFAULT_MAP_LAYERS };
 }
 export function mapLayerFor(type: MapPoint['type']): MapLayer | null {
   return type === 'HOSPITAL' || type === 'MEDICAL' ? 'MEDICAL' : type === 'CCTV' || type === 'POLICE' || type === 'TOILET' ? type : null;
+}
+export function isCctvOnly(points: Pick<MapPoint, 'type'>[]): boolean {
+  return points.length > 0 && points.every(point => point.type === 'CCTV');
 }
 export interface MapOverlayFacility extends Omit<MapFacility, 'type'> {
   type: MapFacility['type'] | 'HOSPITAL';

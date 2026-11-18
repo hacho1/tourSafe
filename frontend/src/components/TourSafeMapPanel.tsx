@@ -8,7 +8,7 @@ import type { Coordinates } from "../../../shared/models";
 import type { MapPoint } from "./MapPanel";
 import { tourSafeMapStyle, type MapTheme } from "../config/tourSafeMapStyle";
 import { mapLink } from "../utils/format";
-import { canExpandMapCluster, groupMapPins, originSafeOffsets, mapPointKind } from '../utils/mapLayers';
+import { canExpandMapCluster, groupMapPins, isCctvOnly, originSafeOffsets, mapPointKind } from '../utils/mapLayers';
 
 setWorkerUrl(workerUrl);
 const validPoint = (p: Coordinates) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180;
@@ -125,7 +125,8 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
       const button = document.createElement("button");
       const { svg, kind } = markerIcon(point);
       button.type = "button";
-      button.className = `ts-map-pin ${group.length > 1 ? 'pin-cluster' : `pin-${point.type.toLowerCase()} pin-${kind}`}${group.some(item => item.id === selected) ? ' selected' : ''}`;
+      const cctvOnly = isCctvOnly(group);
+      button.className = `ts-map-pin ${group.length > 1 ? 'pin-cluster' : `pin-${point.type.toLowerCase()} pin-${kind}`}${cctvOnly ? ' pin-cctv-reference' : ''}${group.some(item => item.id === selected) ? ' selected' : ''}`;
       button.dataset.pointId = point.id;
       button.setAttribute('aria-pressed', String(group.some(item => item.id === selected)));
       const kinds = [...new Set(group.map(item => mapPointKind(item)))];

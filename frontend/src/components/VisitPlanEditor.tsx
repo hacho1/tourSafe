@@ -1,0 +1,393 @@
+import { useEffect, useId, useRef, useState } from 'react';
+import { useSavedPlaces } from '../hooks/useSavedPlaces';
+import { useTravelNeeds } from '../hooks/useTravelNeeds';
+import { dateLabel, phoneLink } from '../utils/format';
+import type { SavedPlaceIdentity } from '../utils/savedPlaces';
+import { buildVisitQuestions, NEEDS, type Need, type Preference, type Preferences } from '../utils/suitability';
+import { readVisitPlans, VISIT_PLANS_KEY, writeVisitPlan, type VisitPlan } from '../utils/visitPlans';
+import { addCurrentVisitQuestions, appendVisitQuestions } from '../utils/visitQuestionDraft';
+import { appendConfirmationNote } from '../utils/visitConfirmationNote';
+
+export interface VisitQuestionRequest { requestId: number; need: Need; preference: Preference }
+
+const planChangeEvent = 'toursafe-visit-plans-change';
+const maxQuestions = 20;
+const maxQuestionLength = 300;
+const maxNoteLength = 2000;
+const readErrorMessage = '저장한 확인 목록을 읽지 못했어요. 브라우저 저장소 설정을 확인하고 다시 불러와 주세요.';
+
+interface EditorState {
+  questionsText: string;
+  note: string;
+  preferences: Preferences;
+  savedAt: string | null;
+  version: string;
+  readError: string;
+}
+
+function preferencesKey(preferences: Preferences) {
+  return JSON.stringify(NEEDS.map(([id]) => preferences[id] || null));
+}
+
+function describePreferences(preferences: Preferences) {
+  const selected = NEEDS.flatMap(([id, label]) => preferences[id]
+    ? [`${label} ${preferences[id] === 'required' ? '필수' : '선호'}`]
+    : []);
+  return selected.length ? selected.join(' · ') : '설정한 방문 조건 없음';
+}
+
+function fromPlan(plan: VisitPlan): EditorState {
+  return {
+    questionsText: plan.questions.join('\n'),
+    note: plan.note,
+    preferences: { ...plan.preferences },
+    savedAt: plan.savedAt,
+    version: JSON.stringify(plan),
+    readError: '',
+  };
+}
+
+function readEditorState(placeId: string, preferences: Preferences): EditorState {
+  const fresh: EditorState = {
+    questionsText: buildVisitQuestions(preferences).join('\n'),
+    note: '',
+    preferences: { ...preferences },
+    savedAt: null,
+    version: 'null',
+    readError: '',
+  };
+  try {
+    const plan = readVisitPlans(window.localStorage)[placeId];
+    return plan ? fromPlan(plan) : fresh;
+  } catch {
+    return { ...fresh, readError: readErrorMessage };
+  }
+}
+
+function questionLines(text: string) {
+  return text.split(/\r?\n/).map(question => question.trim()).filter(Boolean);
+}
+
+export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }: { place: SavedPlaceIdentity; formId?: string; onOpenSaved?: (placeId: string) => void; questionRequest?: VisitQuestionRequest | null }) {
+  const saved = useSavedPlaces();
+  const [currentPreferences] = useTravelNeeds();
+  const [editor, setEditor] = useState(() => readEditorState(place.id, currentPreferences));
+  const [dirty, setDirty] = useState(false);
+  const [externalUpdate, setExternalUpdate] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [copyMessage, setCopyMessage] = useState('');
+  const [questionMessage, setQuestionMessage] = useState('');
+  const [beforeAdd, setBeforeAdd] = useState<Pick<EditorState, 'questionsText' | 'preferences'> | null>(null);
+  const [noteMessage, setNoteMessage] = useState('');
+  const handledQuestionRequest = useRef<string | null>(null);
+  const editorRef = useRef<HTMLFormElement>(null);
+  const questionsRef = useRef<HTMLTextAreaElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const editorStateRef = useRef(editor);
+  const dirtyRef = useRef(false);
+  const preferencesRef = useRef(currentPreferences);
+  const placeIdRef = useRef(place.id);
+  const id = useId();
+  editorStateRef.current = editor;
+  preferencesRef.current = currentPreferences;
+
+  function applyEditor(next: EditorState) {
+    editorStateRef.current = next;
+    setEditor(next);
+  }
+
+  function loadSavedList() {
+    const next = readEditorState(place.id, preferencesRef.current);
+    if (next.readError) {
+      applyEditor({ ...editorStateRef.current, readError: next.readError });
+      return;
+    }
+    applyEditor(next);
+    dirtyRef.current = false;
+    setDirty(false);
+    setExternalUpdate(false);
+    setSaveMessage('');
+    setSaveError('');
+    setCopyMessage('');
+    setQuestionMessage('');
+    setBeforeAdd(null);
+    setNoteMessage('');
+  }
+
+  useEffect(() => {
+    if (placeIdRef.current !== place.id) {
+      placeIdRef.current = place.id;
+      const next = readEditorState(place.id, preferencesRef.current);
+      editorStateRef.current = next;
+      setEditor(next);
+      dirtyRef.current = false;
+      setDirty(false);
+      setExternalUpdate(false);
+      setSaveMessage('');
+      setSaveError('');
+      setCopyMessage('');
+      setQuestionMessage('');
+      setBeforeAdd(null);
+      setNoteMessage('');
+    }
+
+    const refresh = () => {
+      const next = readEditorState(place.id, preferencesRef.current);
+      const current = editorStateRef.current;
+      if (next.readError) {
+        editorStateRef.current = { ...current, readError: next.readError };
+        setEditor(editorStateRef.current);
+        return;
+      }
+      if (next.version === current.version) {
+        if (current.readError) {
+          editorStateRef.current = { ...current, readError: '' };
+          setEditor(editorStateRef.current);
+        }
+        return;
+      }
+      if (dirtyRef.current) {
+        setExternalUpdate(true);
+        return;
+      }
+      editorStateRef.current = next;
+      setEditor(next);
+      setExternalUpdate(false);
+      setSaveMessage('');
+      setSaveError('');
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== VISIT_PLANS_KEY) return;
+      try {
+        if (event.storageArea && event.storageArea !== window.localStorage) return;
+      } catch {
+        return;
+      }
+      refresh();
+    };
+    const onPlanChange = (event: Event) => {
+      const changedPlace = (event as CustomEvent<{ placeId?: string }>).detail?.placeId;
+      if (!changedPlace || changedPlace === place.id) refresh();
+    };
+    const disclosure = editorRef.current?.closest('details');
+    const onToggle = () => { if (disclosure?.open) refresh(); };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(planChangeEvent, onPlanChange);
+    window.addEventListener('focus', refresh);
+    disclosure?.addEventListener('toggle', onToggle);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(planChangeEvent, onPlanChange);
+      window.removeEventListener('focus', refresh);
+      disclosure?.removeEventListener('toggle', onToggle);
+    };
+  }, [place.id]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(planChangeEvent, { detail: { placeId: place.id } }));
+  }, [saved.ids, place.id]);
+
+  useEffect(() => {
+    if (!saveMessage && !saveError) return;
+    const frame = requestAnimationFrame(() => {
+      editorRef.current?.querySelector(saveError ? '.visit-plan-error[role="alert"]' : '.visit-plan-success')?.scrollIntoView({ block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [saveMessage, saveError]);
+
+  useEffect(() => {
+    if (!questionRequest) return;
+    const requestKey = `${place.id}:${questionRequest.requestId}`;
+    if (handledQuestionRequest.current === requestKey) return;
+    handledQuestionRequest.current = requestKey;
+    const question = buildVisitQuestions({ [questionRequest.need]: questionRequest.preference })[1]!;
+    const current = editorStateRef.current;
+    const result = appendVisitQuestions(current.questionsText, [question], maxQuestions);
+    if (result.ok) {
+      if (result.added) {
+        updateDraft({ questionsText: result.text, preferences: { ...current.preferences, [questionRequest.need]: questionRequest.preference } });
+        setBeforeAdd({ questionsText: current.questionsText, preferences: current.preferences });
+      }
+      const label = NEEDS.find(([need]) => need === questionRequest.need)![1];
+      setQuestionMessage(`${label} 확인 질문${result.added ? '을 추가했어요' : '이 이미 있어요'}. 아래 질문을 검토하고 직접 확인한 내용은 방문 메모에 남겨 주세요.`);
+    } else {
+      setQuestionMessage(`질문 ${maxQuestions}개 한도를 넘어서 추가하지 않았어요. 기존 입력은 그대로예요. 질문을 정리한 뒤 다시 선택해 주세요.`);
+    }
+    const frame = requestAnimationFrame(() => {
+      const textarea = questionsRef.current;
+      textarea?.scrollIntoView({ block: 'center' }); textarea?.focus({ preventScroll: true });
+      const start = textarea?.value.indexOf(question) ?? -1;
+      if (start >= 0) textarea?.setSelectionRange(start, start + question.length);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [questionRequest, place.id]);
+
+  function updateDraft(next: Partial<Pick<EditorState, 'questionsText' | 'note' | 'preferences'>>) {
+    dirtyRef.current = true;
+    setDirty(true);
+    applyEditor({ ...editorStateRef.current, ...next });
+    setSaveMessage('');
+    setSaveError('');
+    setCopyMessage('');
+    setQuestionMessage('');
+    setBeforeAdd(null);
+    setNoteMessage('');
+  }
+
+  function addConfirmationTemplate() {
+    const result = appendConfirmationNote(editorStateRef.current.note, dateLabel(new Date().toISOString()), maxNoteLength);
+    if (!result.ok) {
+      setNoteMessage('메모 길이 한도를 넘어 양식을 추가하지 않았어요. 기존 내용은 그대로예요. 메모를 정리한 뒤 다시 시도해 주세요.');
+      return;
+    }
+    if (result.added) updateDraft({ note: result.text });
+    setNoteMessage('개인 확인 양식이에요. 날짜·방법·직접 들은 내용을 적어 주세요. 기관 자료의 판정은 바뀌지 않아요.');
+    requestAnimationFrame(() => {
+      const textarea = noteRef.current;
+      textarea?.scrollIntoView({ block: 'center' }); textarea?.focus({ preventScroll: true });
+      textarea?.setSelectionRange(result.text.length, result.text.length);
+      if (textarea) textarea.scrollTop = textarea.scrollHeight;
+    });
+  }
+
+  function addQuestions() {
+    const current = editorStateRef.current;
+    const result = addCurrentVisitQuestions(current.questionsText, currentPreferences, maxQuestions);
+    if (!result.ok) {
+      setQuestionMessage(`추가하면 질문이 ${result.total}개가 되어 ${maxQuestions}개 한도를 넘어요. 기존 입력은 그대로예요. 필요한 질문을 정리한 뒤 다시 추가해 주세요.`);
+      return;
+    }
+    const previous = { questionsText: current.questionsText, preferences: current.preferences };
+    updateDraft({ questionsText: result.text, preferences: { ...currentPreferences } });
+    setBeforeAdd(previous);
+    setQuestionMessage(result.added ? `현재 조건의 질문 ${result.added}개를 추가했어요. 기존 질문과 메모는 그대로예요.` : '현재 조건의 기본 질문이 이미 있어요. 기존 질문과 메모는 그대로예요.');
+  }
+
+  const questions = questionLines(editor.questionsText);
+  const questionsError = questions.length === 0
+    ? '확인할 질문을 한 줄 이상 입력해 주세요.'
+    : questions.length > maxQuestions
+      ? `질문은 ${maxQuestions}개까지 저장할 수 있어요. 한 줄에 하나씩 적어 주세요.`
+      : questions.some(question => question.length > maxQuestionLength)
+        ? `질문 한 개는 ${maxQuestionLength}자 이내로 적어 주세요.`
+        : '';
+  const noteError = editor.note.length > maxNoteLength ? `메모는 ${maxNoteLength}자 이내로 적어 주세요.` : '';
+  const conditionsChanged = preferencesKey(editor.preferences) !== preferencesKey(currentPreferences);
+  const callHref = place.source.kind !== 'DEMO_DATA' ? phoneLink(place.phone) : null;
+
+  function savePlan() {
+    setSaveMessage('');
+    setSaveError('');
+    if (questionsError || noteError) {
+      setSaveError(questionsError || noteError);
+      (questionsError ? questionsRef : noteRef).current?.focus();
+      return;
+    }
+    setSaving(true);
+    try {
+      try {
+        const latest = readVisitPlans(window.localStorage)[place.id];
+        if (JSON.stringify(latest ?? null) !== editorStateRef.current.version) {
+          setExternalUpdate(true);
+          setSaveError('다른 화면에서 이 장소의 목록이 바뀌어 덮어쓰지 않았어요. 현재 입력을 복사해 보관한 뒤 저장된 목록을 불러와 주세요.');
+          return;
+        }
+      } catch {
+        setSaveError(readErrorMessage);
+        return;
+      }
+      if (!saved.places?.[place.id]) {
+        const identitySaved = saved.toggle(place, saved.ids.includes(place.id) ? 'refresh' : 'toggle');
+        if (!identitySaved) {
+          setSaveError('후보 저장을 완료하지 못해 확인 목록도 저장하지 않았어요. 입력은 그대로 남아 있어요. 저장소 설정을 확인한 뒤 다시 시도해 주세요.');
+          return;
+        }
+      }
+      const plan: VisitPlan = {
+        placeId: place.id,
+        savedAt: new Date().toISOString(),
+        preferences: { ...editor.preferences },
+        questions,
+        note: editor.note,
+      };
+      try {
+        writeVisitPlan(window.localStorage, plan);
+      } catch {
+        setSaveError('후보는 저장됐지만 확인 목록은 저장하지 못했어요. 입력은 그대로 남아 있어요. 저장 공간과 설정을 확인한 뒤 다시 저장해 주세요.');
+        return;
+      }
+      applyEditor(fromPlan(plan));
+      dirtyRef.current = false;
+      setDirty(false);
+      setExternalUpdate(false);
+      setSaveMessage('후보와 확인 목록을 이 기기에 저장했어요.');
+      setBeforeAdd(null);
+      window.dispatchEvent(new CustomEvent(planChangeEvent, { detail: { placeId: place.id } }));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function copyQuestions() {
+    setCopyMessage('');
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(editor.questionsText);
+      setCopyMessage('질문을 복사했어요.');
+    } catch {
+      questionsRef.current?.focus();
+      questionsRef.current?.select();
+      setCopyMessage('자동 복사가 되지 않아 질문을 선택했어요. 길게 누르거나 키보드의 복사 기능으로 복사해 주세요.');
+    }
+  }
+
+  return <form id={formId} className="visit-plan-editor" ref={editorRef} aria-labelledby={`${id}-heading`} onSubmit={event => { event.preventDefault(); savePlan(); }}>
+    <h4 className="visit-plan-heading" id={`${id}-heading`}>방문 전에 확인할 질문</h4>
+    <p className="visit-plan-help">직접 편집하는 질문과 개인 메모이며 기관 자료가 아니에요. 현재 이용 가능 여부를 보장하지 않아요. 이 기기에 저장하며 자동 전송하지 않아요.</p>
+    {editor.savedAt && <p className="visit-plan-meta">확인 목록 저장일: <time dateTime={editor.savedAt}>{dateLabel(editor.savedAt)}</time></p>}
+    <p className="visit-plan-preferences"><strong>{editor.savedAt ? '목록 저장 당시 조건' : '질문에 반영한 최근 조건'}</strong>: {describePreferences(editor.preferences)}</p>
+    <p className="visit-plan-help">이전 조건의 질문과 직접 작성·수정한 질문도 함께 남아 있을 수 있어요. 필요 없는 질문은 직접 지울 수 있어요.</p>
+    {dirty && <p className="visit-plan-meta">수정한 내용은 아직 저장되지 않았어요.</p>}
+    {conditionsChanged && <div className="visit-plan-warning" role="status">
+      <p>이 목록의 조건과 현재 방문 조건이 달라요. 이전 목록은 현재 조건의 충족 여부를 뜻하지 않아요.</p>
+      <p>현재 조건: {describePreferences(currentPreferences)}</p>
+    </div>}
+    <button type="button" onClick={addQuestions}>현재 조건 질문 추가</button>
+    {beforeAdd && <button type="button" className="visit-plan-undo" onClick={() => { updateDraft(beforeAdd); setQuestionMessage('직전 질문 추가를 되돌렸어요.'); }}>직전 질문 추가 되돌리기</button>}
+    {questionMessage && <p className="visit-plan-meta" role="status">{questionMessage}</p>}
+    {editor.readError && <div className="visit-plan-error" role="alert">
+      <p>{editor.readError}</p>
+      <button type="button" onClick={loadSavedList}>저장 목록 다시 읽기</button>
+    </div>}
+    {externalUpdate && <div className="visit-plan-warning" role="status">
+      <p>다른 화면에서 저장한 목록이 바뀌었어요. 작성 중인 입력은 유지했어요. 불러오면 현재 입력이 저장된 목록으로 바뀝니다.</p>
+      <button type="button" onClick={loadSavedList}>저장된 목록 불러오기</button>
+    </div>}
+    <div className="visit-plan-field">
+      <label htmlFor={`${id}-questions`}>확인할 질문</label>
+      <p className="visit-plan-help" id={`${id}-questions-help`}>한 줄에 질문 하나, 최대 {maxQuestions}개·질문당 {maxQuestionLength}자 ({questions.length}/{maxQuestions}개)</p>
+      <textarea id={`${id}-questions`} ref={questionsRef} aria-label={`${place.name} 확인할 질문`} aria-describedby={`${id}-questions-help${questionsError ? ` ${id}-questions-error` : ''}`} aria-invalid={Boolean(questionsError)} rows={Math.max(3, Math.min(7, questions.length))} maxLength={maxQuestions * maxQuestionLength + maxQuestions - 1} value={editor.questionsText} onChange={event => updateDraft({ questionsText: event.target.value })} />
+      {questionsError && <p className="visit-plan-error" id={`${id}-questions-error`}>{questionsError}</p>}
+    </div>
+    <div className="visit-plan-field">
+      <label htmlFor={`${id}-note`}>방문 메모</label>
+      <p className="visit-plan-help">직접 확인한 날짜·방법·내용을 남겨요. 개인 기록은 기관 자료와 구분하며 현재 이용 가능 판정을 바꾸지 않아요.</p>
+      <button type="button" className="confirmation-note-template" onClick={addConfirmationTemplate}>개인 확인 메모 양식 추가</button>
+      {noteMessage && <p className="visit-plan-meta" role="status">{noteMessage}</p>}
+      <textarea id={`${id}-note`} ref={noteRef} aria-label={`${place.name} 방문 메모`} aria-describedby={`${id}-note-help${noteError ? ` ${id}-note-error` : ''}`} aria-invalid={Boolean(noteError)} rows={Math.max(3, Math.min(8, editor.note.split('\n').length))} maxLength={maxNoteLength} value={editor.note} onChange={event => updateDraft({ note: event.target.value })} />
+      <p className="visit-plan-help" id={`${id}-note-help`}>{editor.note.length}/{maxNoteLength}자</p>
+      {noteError && <p className="visit-plan-error" id={`${id}-note-error`}>{noteError}</p>}
+    </div>
+    <div className="visit-plan-actions">
+      <button type="submit" disabled={saving}>{saving ? '저장 중…' : '후보와 확인 목록 저장'}</button>
+      <button type="button" onClick={() => void copyQuestions()} disabled={!editor.questionsText.trim()} aria-label={`${place.name} 확인 질문 복사`}>질문 복사</button>
+      {callHref && <a href={callHref}>전화로 확인하기</a>}
+    </div>
+    {!callHref && <p className="visit-plan-help">{place.source.kind === 'DEMO_DATA' ? '시연 데이터에서는 전화 연결을 제공하지 않아요.' : place.phone ? '전화번호 형식을 확인할 수 없어 전화 연결을 제공하지 않아요.' : '전화번호가 제공되지 않았어요. 질문을 복사해 문의할 때 사용해 주세요.'}</p>}
+    {saveError && <p className="visit-plan-error" role="alert">{saveError}</p>}
+    {saveMessage && <div className="visit-plan-success"><p className="visit-plan-status" role="status">{saveMessage}</p>{onOpenSaved && <button type="button" onClick={() => onOpenSaved(place.id)}>저장한 준비 카드 보기</button>}</div>}
+    {copyMessage && <p className="visit-plan-status" role="status">{copyMessage}</p>}
+  </form>;
+}

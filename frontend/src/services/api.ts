@@ -3,8 +3,9 @@ import type {
   SearchOptions,
   SearchResponse,
 } from "../../../shared/models";
+import { offlineFetch } from './offline';
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(path, {
+  const response = await offlineFetch(path, {
     signal: signal
       ? AbortSignal.any([signal, AbortSignal.timeout(90_000)])
       : AbortSignal.timeout(90_000),

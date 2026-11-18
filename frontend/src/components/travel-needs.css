@@ -1,0 +1,17 @@
+.needs-button { min-height:44px; }
+.needs-home { margin: 0 0 8px; }
+.needs-settings { padding: 20px; max-height: 70vh; overflow:auto; }
+.needs-settings fieldset { border:0; border-top:1px solid #d5dfd8; margin:16px 0; padding:12px 0; }
+.needs-settings legend { font-weight:700; }
+.needs-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; }
+.needs-row select { min-height:44px; max-width:50%; padding:6px; }
+.suitability { padding:16px; background:#eff6f0; border-radius:8px; color:#163a2c; }
+.suitability.compact { padding:8px 0; background:transparent; }
+.suitability p { margin:6px 0; }
+.suitability ul { margin:8px 0; padding-left:20px; }
+.suitability li { margin:6px 0; }
+.suitability small { color:#46564d; }
+
+.suitability.compact li { overflow-wrap:anywhere; }
+.suitability.compact li p { font-size:.875rem; line-height:1.45; }
+.card-condition-warning, .needs-storage-warning { color:#853d17; background:#fff2e5; padding:10px; border-radius:6px; overflow-wrap:anywhere; }

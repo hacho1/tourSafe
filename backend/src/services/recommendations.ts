@@ -1,5 +1,6 @@
 import type {
   AdapterStatus,
+  PlaceAmenities,
   Recommendation,
   SearchOptions,
   SearchResponse,
@@ -18,7 +19,10 @@ import { demoRecommendations } from "../mock/fixtures.js";
 import { emptyWeather } from "../utils/data.js";
 import { calculateScore } from "../utils/scoring.js";
 import { recommendationOrder } from "../../../shared/order.js";
-import { hasPublicFacilities, getImportedTouristInfo } from "../adapters/publicFacilities.js";
+import { hasPublicFacilities, getImportedTouristInfo, getImportedToilets } from "../adapters/publicFacilities.js";
+import { getAccessibleTour } from '../adapters/accessibleTourApi.js';
+import { getTourismAmenities, hasTourismStandardData } from '../adapters/tourismStandard.js';
+import { mergeVisitFacilities } from '../utils/visitFacilities.js';
 
 export async function safeAdapter<T>(
   key: string,
@@ -90,7 +94,7 @@ export async function getRecommendations(
     }
     recommendations = await Promise.all(
       tour.data.map(async (spot): Promise<Recommendation> => {
-        const [weather, medical, police, info, toilets] = await Promise.all([
+        const [weather, medical, police, info, toilets, accessible, tourismStandard] = await Promise.all([
           safeAdapter<WeatherInfo>(
             "weather",
             "날씨",
@@ -122,11 +126,23 @@ export async function getRecommendations(
           safeAdapter<SupportFacility[]>(
             "toilets",
             "공중화장실",
-            !!config.toiletKey,
-            () => getToilets(spot),
+            hasPublicFacilities() || !!config.toiletKey,
+            () => hasPublicFacilities() ? getImportedToilets(spot) : getToilets(spot),
             [],
           ),
+          safeAdapter<PlaceAmenities>(
+            'accessibleTour', '무장애 여행 정보', !!config.accessibleTourKey,
+            () => getAccessibleTour(spot), { safety: {}, details: [] },
+          ),
+          safeAdapter<PlaceAmenities>(
+            'tourismStandard', '전국관광지정보표준데이터', hasTourismStandardData(),
+            () => getTourismAmenities(spot), { safety: {}, details: [] },
+          ),
         ]);
+        if (accessible.status.status === 'OK' && !accessible.data.details.length) accessible.status.message = '이 관광지에 등록된 무장애 상세정보가 없어요. 시설이 없다는 뜻은 아니에요.';
+        if (tourismStandard.status.status === 'OK' && !tourismStandard.data.details.length) tourismStandard.status.message = '전국관광지표준데이터에서 이 장소와 확실히 연결할 편의시설 자료를 찾지 못했어요.';
+        const enrichedSpot = mergeVisitFacilities(spot, [accessible.data, tourismStandard.data]);
+        const placeStatuses = [weather.status, medical.status, police.status, info.status, toilets.status, accessible.status, tourismStandard.status];
         const facilities = [
           ...medical.data,
           ...police.data,
@@ -135,28 +151,16 @@ export async function getRecommendations(
         ];
         return {
           checkedAt: new Date().toISOString(),
-          spot,
+          spot: enrichedSpot,
           facilities,
           weather: weather.data,
-          score: calculateScore(spot, facilities, weather.data, [...statuses, weather.status, medical.status, police.status, info.status, toilets.status]),
-          statuses: [
-            weather.status,
-            medical.status,
-            police.status,
-            info.status,
-            toilets.status,
-          ],
+          score: calculateScore(enrichedSpot, facilities, weather.data, [...statuses, ...placeStatuses]),
+          statuses: placeStatuses,
         };
       }),
     );
   }
-  recommendations.sort((a, b) => {
-    if (a.score.hardFilter.length !== b.score.hardFilter.length)
-      return a.score.hardFilter.length - b.score.hardFilter.length;
-    return options.withKids
-      ? recommendationOrder(a, b)
-      : a.spot.distanceMeters - b.spot.distanceMeters;
-  });
+  recommendations.sort(recommendationOrder);
   return {
     mode,
     generatedAt: new Date().toISOString(),

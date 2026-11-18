@@ -1,0 +1,90 @@
+{
+  "checkedAt": "2026-10-16T10:43:14.997Z",
+  "csvRows": 892,
+  "accessibleSample": {
+    "contentId": "127291",
+    "factKeys": [
+      "toilet"
+    ],
+    "detailLabels": [
+      "접근로",
+      "화장실",
+      "장애인 주차"
+    ]
+  },
+  "csvSample": {
+    "name": "증평민속체험박물관",
+    "factKeys": [
+      "nursingRoom",
+      "benches",
+      "toilet"
+    ],
+    "sourceDate": "2026-08-05"
+  },
+  "seongsuNearbyToilets": [
+    {
+      "name": "서울숲 곤충식물원 화장실",
+      "distanceMeters": 419,
+      "locationNote": "주소 기준 위치 · 실제 화장실 입구와 다를 수 있어요."
+    },
+    {
+      "name": "서울숲 생태숲 화장실",
+      "distanceMeters": 419,
+      "locationNote": "주소 기준 위치 · 실제 화장실 입구와 다를 수 있어요."
+    },
+    {
+      "name": "서울숲 커뮤니티센터(2층) 화장실",
+      "distanceMeters": 419,
+      "locationNote": "주소 기준 위치 · 실제 화장실 입구와 다를 수 있어요."
+    }
+  ],
+  "liveRecommendations": [
+    {
+      "name": "증평 자전거공원",
+      "id": "2714351",
+      "knownFields": [],
+      "detailLabels": [
+        "접근로",
+        "출입구",
+        "장애인 주차"
+      ],
+      "toilets": 3,
+      "statuses": [
+        {
+          "key": "weather",
+          "status": "OK"
+        },
+        {
+          "key": "medical",
+          "status": "OK"
+        },
+        {
+          "key": "police",
+          "status": "OK"
+        },
+        {
+          "key": "touristInfo",
+          "status": "OK"
+        },
+        {
+          "key": "toilets",
+          "status": "OK"
+        },
+        {
+          "key": "accessibleTour",
+          "status": "OK"
+        },
+        {
+          "key": "tourismStandard",
+          "status": "OK"
+        }
+      ]
+    }
+  ],
+  "listStatus": [
+    {
+      "key": "tour",
+      "status": "OK"
+    }
+  ]
+}

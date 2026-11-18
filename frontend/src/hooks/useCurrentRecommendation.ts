@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Recommendation } from '../../../shared/models';
 import { currentRecommendation, RECOMMENDATION_TTL } from '../utils/recommendationFreshness';
+import { useConnection } from './useConnection';
+import { snapshotRecommendation } from '../services/offline';
 export function useCurrentRecommendation(item: Recommendation) {
+  const online = useConnection();
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const refresh = () => setNow(Date.now());
@@ -11,5 +14,5 @@ export function useCurrentRecommendation(item: Recommendation) {
     document.addEventListener('visibilitychange', refresh);
     return () => { clearTimeout(timer); document.removeEventListener('visibilitychange', refresh); };
   }, [item.checkedAt]);
-  return currentRecommendation(item, now);
+  return !online || item.offlineSnapshotAt ? snapshotRecommendation(item) : currentRecommendation(item, now);
 }

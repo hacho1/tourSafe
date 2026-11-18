@@ -4,6 +4,7 @@ import type { Coordinates, FacilityType } from "../../../shared/models";
 import { loadKakaoMap } from "../services/kakaoMapApi";
 import { mapLink } from "../utils/format";
 import { MapErrorBoundary, MapFailureNotice } from './MapErrorBoundary';
+import { useConnection } from '../hooks/useConnection';
 const TourSafeMapPanel = lazy(() => import("./TourSafeMapPanel"));
 
 export interface MapPoint extends Coordinates {
@@ -42,6 +43,7 @@ export function MapPanel({
   onSelect?: (id: string) => void;
   demo: boolean;
 }) {
+  const online = useConnection();
   const container = useRef<HTMLDivElement>(null),
     onSelectRef = useRef(onSelect);
   const [status, setStatus] = useState<"LOADING" | "READY" | "FALLBACK">(
@@ -51,7 +53,7 @@ export function MapPanel({
     onSelectRef.current = onSelect;
   }, [onSelect]);
   useEffect(() => {
-    if (!demo) return;
+    if (!demo || !online) return;
     let cancelled = false,
       cleanup = () => {};
     setStatus("LOADING");
@@ -106,7 +108,8 @@ export function MapPanel({
       cancelled = true;
       cleanup();
     };
-  }, [points, demo]);
+  }, [points, demo, online]);
+  if (!online) return <div className="offline-map-placeholder"><strong>오프라인 · 지도 배경을 불러올 수 없어요</strong><p>아래 목록과 저장된 주소를 확인해 주세요. 실제 경로는 연결 후 길찾기로 확인해 주세요.</p>{points.map(point => <button key={point.id} type="button" onClick={() => onSelect?.(point.id)}>{point.name}</button>)}</div>;
   if (!demo) return <MapErrorBoundary fallback={<div className="map-recovery-list"><MapFailureNotice />{points.map(point => <button key={point.id} onClick={() => onSelect?.(point.id)}>{point.name}</button>)}</div>}><Suspense fallback={<div className="ts-map-placeholder" role="status">지도를 준비하고 있어요…</div>}><TourSafeMapPanel points={points} selected={selected} onSelect={onSelect} /></Suspense></MapErrorBoundary>;
   const selectedPoint = points.find((p) => p.id === selected) || points[0];
   const latMin = Math.min(...points.map((p) => p.lat)),

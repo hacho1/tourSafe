@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import type { SearchOptions, SearchResponse } from "../../../shared/models";
 import { searchPlaces } from "../services/api";
+import { useConnection } from './useConnection';
+import { useAppServer } from './useAppServer';
 export function useRecommendations(options: SearchOptions) {
+  const online = useConnection();
+  const server = useAppServer();
   const [data, setData] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,15 +37,15 @@ export function useRecommendations(options: SearchOptions) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [options.lat, options.lng, options.radius, options.withKids, retry]);
+  }, [options.lat, options.lng, options.radius, options.withKids, retry, online, server]);
   useEffect(() => {
-    if (!data || data.mode === 'DEMO') return;
+    if (!data || data.mode === 'DEMO' || data.offlineSnapshotAt || !online) return;
     const deadline = Date.parse(data.generatedAt) + 5 * 60_000;
     const renew = () => { if (document.visibilityState === 'visible' && Date.now() >= deadline) { setData(null); setRetry(v => v + 1); } };
     const timer = window.setTimeout(renew, Math.max(0, deadline - Date.now()));
     document.addEventListener('visibilitychange', renew);
     return () => { clearTimeout(timer); document.removeEventListener('visibilitychange', renew); };
-  }, [data]);
+  }, [data, online]);
   const current = data?.origin.lat === options.lat && data.origin.lng === options.lng && data.radiusMeters === options.radius ? data : null;
   return { data: current, loading, error, refresh: () => setRetry((v) => v + 1) };
 }
