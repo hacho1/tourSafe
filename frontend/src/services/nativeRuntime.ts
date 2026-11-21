@@ -1,6 +1,6 @@
 import { App as AndroidApp } from '@capacitor/app';
 import { Network } from '@capacitor/network';
-import { nativeApp, updateNativeConnection } from './platform';
+import { APP_BACKGROUNDED, nativeApp, updateNativeConnection } from './platform';
 
 export function initializeNativeApp() {
   if (!nativeApp) return;
@@ -11,6 +11,8 @@ export function initializeNativeApp() {
     if (state.isActive) {
       void Network.getStatus().then(status => updateNativeConnection(status.connected)).catch(() => {});
       window.dispatchEvent(new Event('focus'));
+    } else {
+      window.dispatchEvent(new Event(APP_BACKGROUNDED));
     }
   });
   void AndroidApp.addListener('backButton', ({ canGoBack }) => {

@@ -1,0 +1,97 @@
+.mobile-purpose-title,
+.mobile-explore-title { display: none; }
+
+.page-shell .search-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
+.search-options { min-width: 0; }
+.search-options > summary,
+.map-layer-options > summary {
+  min-height: 44px;
+  padding: 11px 8px;
+  color: #244d42;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+.search-options-fields { display: flex; flex-wrap: wrap; gap: 12px 18px; padding: 0 8px 8px; }
+.search-options-fields :is(.search-family, .search-radius) { margin: 0; min-width: 0; }
+.search-location-notice { margin-top: 6px; font-size: 12px; }
+.map-layer-options > summary { padding: 9px 0; }
+.map-layer-options[open] > summary { margin-bottom: 4px; }
+.help-practice { display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid #dde7df; }
+.quick-help-dialog .help-practice h2 { margin: 0; font-size: 18px; }
+.help-practice p { margin: 0; font-size: 14px; line-height: 1.5; }
+.help-practice .help-shake-toggle > span { display: flex; align-items: center; gap: 7px; font-size: 14px; }
+.help-practice .secondary { min-height: 46px; justify-self: start; padding: 8px 15px; }
+.help-settings { border-top: 1px solid #dde7df; }
+.help-settings .offline-notice { margin-block: 8px; width: 100%; }
+.help-settings .native-connection-entry { padding: 8px 0; }
+.mock-report-dialog::backdrop { background: rgb(16 30 25 / 46%); backdrop-filter: none; }
+.mock-report-dialog { width: min(400px, calc(100% - 24px)); }
+.mock-report-content { display: grid; justify-items: center; gap: 12px; padding: 24px; text-align: center; }
+.mock-report-content h2 { margin: 0; font-size: 22px; line-height: 1.3; }
+.mock-report-content > svg { color: #146451; }
+.mock-report-content p { margin: 0; font-size: 15px; line-height: 1.55; }
+.mock-report-time { display: flex; align-items: baseline; justify-content: center; gap: 6px; color: #146451; }
+.mock-report-time strong { font-size: clamp(56px, 15vw, 76px); line-height: 1; font-variant-numeric: tabular-nums; }
+.mock-report-time span { font-weight: 600; }
+.mock-report-content .mock-report-note { color: #41574a; font-size: 13px; }
+.mock-report-content > button { min-height: 48px; min-width: 145px; margin-top: 5px; }
+
+@media (max-width: 900px) {
+  .app-visit-notices:has(.first-visit-prompt) { display: none; }
+  .app-night-reminder { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+  .app-night-reminder:empty { display: none; }
+  .app-page .refined-safety-app .sm-main.sm-reference-main { padding-inline: 16px; }
+  .refined-safety-app .needs-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+  }
+  .mobile-purpose-title { display: inline; }
+  .desktop-purpose-title, .safety-purpose-copy p, .safety-purpose-actions .safety-explore-button { display: none; }
+  .safety-purpose-copy h1 { font-size: 22px; }
+  .safety-purpose-actions { margin: 0; }
+  .safety-purpose-actions .needs-button { min-height: 44px; }
+  .refined-map .map-canvas-wrap { height: clamp(350px, calc(100dvh - 178px), 690px); }
+  .refined-map .calm-location-choice { min-height: 52px; }
+  .refined-map .calm-map-bottom { bottom: 34px; }
+  .refined-map .refined-facility-panel { box-shadow: none; }
+  .refined-map :is(.calm-locate, .calm-map-settings) { box-shadow: none; }
+  .refined-map .maplibregl-ctrl-attrib { font-size: 11px; margin-right: 6px; }
+  .refined-map .maplibregl-ctrl-scale { font-size: 11px; }
+  .map-layer-options > summary { padding-block: 7px; }
+  .page-shell :is(.hero, .context-strip, .trust-banner, .candidate-flow-note, .live-banner, .section-heading .eyebrow) { display: none; }
+  .page-shell .mobile-explore-title { display: block; margin: 8px 0 12px; font-size: 24px; line-height: 1.3; }
+  .page-shell .search-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 12px;
+    margin-block: 0;
+    box-shadow: none;
+  }
+  .search-panel .search-location { grid-column: 1 / -1; }
+  .search-panel .location-note { display: none; }
+  .search-panel .search-options { grid-column: 1; }
+  .search-options[open] { grid-column: 1 / -1; }
+  .app-page .site-header, .app-page .site-header .header-inner { min-height: 48px; height: 48px; }
+  .app-page .site-header .brand small { display: none; }
+  .app-page .site-header .brand-icon { width: 32px; height: 32px; }
+  .search-panel .search-submit { grid-column: 2; min-height: 44px; white-space: nowrap; }
+  .search-panel .search-options[open] + .search-submit { grid-column: 1 / -1; }
+  .page-shell .results-section { padding-top: 10px; }
+  .page-shell .results-toolbar.no-classification .filter-chips,
+  .page-shell #classification-note { display: none; }
+  .page-shell .results-toolbar { margin-top: 6px; }
+  .page-shell .spot-card { box-shadow: none; }
+  .page-shell .card-image { height: clamp(125px, 36vw, 160px); }
+  .saved-shell .section-heading { margin-top: 0; }
+  .quick-help-dialog .emergency-scroll { padding: 14px 16px; }
+  .quick-help-dialog .emergency-choices { margin: 10px 0; }
+  .quick-help-dialog .emergency-choices a { min-height: 96px; padding: 10px; }
+}

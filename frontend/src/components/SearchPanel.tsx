@@ -102,9 +102,12 @@ export function SearchPanel({
             {region.address || "선택한 위치"}
           </span>
         </div>
-        <div className="search-family"><TravelNeedsSettings /></div>
-        <fieldset className="search-radius">
-          <legend className="field-label">얼마나 가까운 곳으로 갈까요?</legend>
+        <details className="search-options">
+          <summary>검색 조건 · {radius / 1000}km</summary>
+          <div className="search-options-fields">
+            <div className="search-family"><TravelNeedsSettings /></div>
+            <fieldset className="search-radius">
+          <legend className="field-label">검색 반경</legend>
           <div className="radius-options">
             {[1000, 3000, 5000, 10000].map((r) => (
               <label key={r} className={r === radius ? "selected" : ""}>
@@ -119,7 +122,9 @@ export function SearchPanel({
               </label>
             ))}
           </div>
-        </fieldset>
+            </fieldset>
+          </div>
+        </details>
         <button
           type="submit"
           className="primary search-submit"
@@ -133,7 +138,7 @@ export function SearchPanel({
           {loading ? "찾는 중" : "관광지 찾기"}
         </button>
       </form>
-      <p className="small muted">{LOCATION_SHARING_NOTICE}</p>
+      <p className="small muted search-location-notice">{LOCATION_SHARING_NOTICE}</p>
       {message && !open && (
         <p className="inline-notice" role="status">
           <CircleAlert size={16} />

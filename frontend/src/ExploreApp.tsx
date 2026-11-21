@@ -163,12 +163,12 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
       </a>
       <header className="site-header emergency-header">
         <div className="header-inner">
-          <a className="brand" href="#map" onClick={event => { event.preventDefault(); onMap(); }} aria-label="TourSafe 처음으로">
+          <a className="brand" href="#map" onClick={event => { event.preventDefault(); onMap(); }} aria-label="TripFit 처음으로">
             <span className="brand-icon">
               <ShieldCheck size={25} strokeWidth={2.1} />
             </span>
             <span>
-              Tour<span className="brand-safe">Safe</span>
+              Trip<span className="brand-safe">Fit</span>
               <small>함께 떠나는, 편안한 하루</small>
             </span>
           </a>
@@ -184,15 +184,16 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               )}
             </button>
             <button onClick={() => setAbout(true)}>
-              TourSafe 이야기
+              TripFit 이야기
               <ArrowUpRight size={14} />
             </button>
           </nav>
           <EmergencyEntry onClick={onEmergency} />
         </div>
       </header>
-      <main className="page-shell">
+      <main className={`page-shell ${savedView ? "saved-shell" : "explore-shell"}`}>
         <div className="page-feedback"><SavedFeedback /></div>
+        <h1 className="mobile-explore-title">{savedView ? "저장한 장소" : "여행지 찾기"}</h1>
         <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow">
@@ -245,7 +246,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             </span>
           </div>
         </section>
-        <SearchPanel
+        {!savedView && <SearchPanel
           active={active}
           region={region}
           onRegion={setRegion}
@@ -255,7 +256,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
           onKids={setWithKids}
           loading={loading}
           onSearch={search}
-        />
+        />}
         <div className="context-strip">
           <div>
             <span className="context-icon">
@@ -311,8 +312,8 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               <span className="eyebrow">EXPLORE NEARBY</span>
               <h2>
                 {filter === "saved"
-                  ? "다음에 함께 가고 싶은 곳"
-                  : "방문 후보를 비교해 보세요"}
+                  ? "저장 목록"
+                  : "주변 여행지"}
                 <span className="result-count">
                   {savedView ? saved.ids.length : loading ? "…" : results.length}
                 </span>
@@ -343,7 +344,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               </button>
             </div>
           </div>
-          <div className="results-toolbar">
+          <div className={`results-toolbar ${!hasClassification ? "no-classification" : ""}`}>
             <div className="filter-chips" aria-label="관광지 필터">
               {(
                 [
@@ -395,7 +396,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
               </button>
             </div>
           )}
-          {!loading && data?.mode === "LIVE" && !data.offlineSnapshotAt && data.statuses.some(status => status.key === "tour" && status.status === "OK") && <div className="demo-banner"><span className="demo-badge">LIVE</span><span>한국관광공사 실제 관광정보 · 운영시간과 현장 상황은 방문 전 확인해 주세요.</span></div>}
+          {!loading && data?.mode === "LIVE" && !data.offlineSnapshotAt && data.statuses.some(status => status.key === "tour" && status.status === "OK") && <div className="demo-banner live-banner"><span className="demo-badge">LIVE</span><span>한국관광공사 실제 관광정보 · 운영시간과 현장 상황은 방문 전 확인해 주세요.</span></div>}
           <SnapshotNotice at={data?.offlineSnapshotAt} label="방문 후보" />
           {!loading &&
             data?.statuses
@@ -540,17 +541,17 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
             </p>
           </div>
           <button onClick={() => setAbout(true)}>
-            TourSafe 알아보기
+            TripFit 알아보기
             <ArrowUpRight size={17} />
           </button>
         </section>
         <footer className="site-footer">
           <a href="#map" onClick={event => { event.preventDefault(); onMap(); }} className="footer-brand">
             <ShieldCheck size={18} />
-            TourSafe
+            TripFit
           </a>
           <p>나에게 필요한 여행 정보를 찾는 작은 가이드.</p>
-          <span>© 2026 TourSafe · University prototype</span>
+          <span>© 2026 TripFit · University prototype</span>
         </footer>
       </main>
       {selected && (

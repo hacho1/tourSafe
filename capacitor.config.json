@@ -1,6 +1,6 @@
 {
   "appId": "kr.toursafe.app",
-  "appName": "TourSafe",
+  "appName": "TripFit",
   "webDir": "frontend/dist-android",
   "server": { "androidScheme": "https" },
   "android": { "backgroundColor": "#f7f8f4", "allowMixedContent": false },

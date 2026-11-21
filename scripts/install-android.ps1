@@ -2,7 +2,7 @@ param([string]$Serial, [string]$ToolsRoot = 'D:\CodexData\TourSafe-Android')
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $adb = Join-Path $ToolsRoot 'sdk\platform-tools\adb.exe'
-$apk = Join-Path $projectRoot 'releases\TourSafe-0.1.0-test.apk'
+$apk = Join-Path $projectRoot 'releases\TripFit-0.1.2-test.apk'
 if (-not (Test-Path -LiteralPath $apk)) { throw '먼저 npm run android:apk로 APK를 만들어 주세요.' }
 $devices = & $adb devices
 $ready = @($devices | ForEach-Object { if ($_ -match '^([^\s]+)\s+device$') { $Matches[1] } })

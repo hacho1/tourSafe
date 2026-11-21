@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">TourSafe</string>
-    <string name="title_activity_main">TourSafe</string>
+    <string name="app_name">TripFit</string>
+    <string name="title_activity_main">TripFit</string>
     <string name="package_name">kr.toursafe.app</string>
     <string name="custom_url_scheme">kr.toursafe.app</string>
 </resources>

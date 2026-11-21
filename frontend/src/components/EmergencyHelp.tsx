@@ -2,6 +2,8 @@ import { deviceLocation } from '../services/deviceLocation';
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, BookOpen, Check, Copy, LocateFixed, MapPin, ShieldCheck, Siren, Languages, Smartphone } from "lucide-react";
 import { Modal } from "./Modal";
+import { AppConnection } from "./AppConnection";
+import { OfflineNotice } from "./OfflineNotice";
 import { buildEmergencyMessage, formatEmergencyLocation, isFreshEmergencyLocation, requestEmergencyLocation, type EmergencyLocation } from "../utils/emergency";
 import "../emergency-help.css";
 import type { useShake } from '../hooks/useShake';
@@ -10,7 +12,13 @@ export function EmergencyEntry({ onClick }: { onClick: () => void }) {
   return <button type="button" className="emergency-launch" onClick={onClick} aria-label="도움 열기"><Siren size={17} aria-hidden="true" /><span>도움</span></button>;
 }
 
-export function EmergencyHelp({ onClose, shake, onGuide, openedByShake = false }: { onClose: () => void; shake: ReturnType<typeof useShake>; onGuide?: () => void; openedByShake?: boolean }) {
+export function EmergencyHelp({ onClose, shake, onGuide, onMockReport, onSaved }: {
+  onClose: () => void;
+  shake: ReturnType<typeof useShake>;
+  onGuide: () => void;
+  onMockReport: () => void;
+  onSaved: () => void;
+}) {
   const [location, setLocation] = useState<EmergencyLocation | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState("");
@@ -87,8 +95,7 @@ export function EmergencyHelp({ onClose, shake, onGuide, openedByShake = false }
   return <Modal title="도움 · 연락하기" className="emergency-dialog quick-help-dialog" onClose={onClose} hideEmergency>
     <div className="emergency-scroll">
       <section className="emergency-call" aria-label="대한민국 도움 연락처">
-        <h2>{openedByShake ? '도움이 필요하세요?' : '어디로 연락할까요?'}</h2>
-        <p className="emergency-intro">{openedByShake ? '흔들기로 도움 화면을 열었어요. 전화할 곳은 직접 선택해 주세요.' : '위치 확인 없이도 전화 앱을 열 수 있어요.'}</p>
+        <h2>도움이 필요할 때</h2>
           <div className="emergency-choices">
             <a href="tel:112" aria-label="위협·범죄 112 전화 앱 열기"><ShieldCheck size={22} aria-hidden="true" /><b>위협·범죄</b><strong>112</strong><span>전화 앱 열기 <ArrowUpRight size={14} /></span></a>
             <a href="tel:119" aria-label="화재·구급 119 전화 앱 열기"><Siren size={22} aria-hidden="true" /><b>화재·구급</b><strong>119</strong><span>전화 앱 열기 <ArrowUpRight size={14} /></span></a>
@@ -97,7 +104,7 @@ export function EmergencyHelp({ onClose, shake, onGuide, openedByShake = false }
         <p className="quick-help-note">전화 앱이 열리지 않으면 번호를 직접 입력해 주세요.</p>
       </section>
 
-      {onGuide && <button type="button" className="help-guide-entry" onClick={onGuide}><BookOpen size={18} aria-hidden="true" /><span>사용법 · 도움 기능 체험</span><ArrowRight size={17} aria-hidden="true" /></button>}
+
 
       <details className="emergency-location">
         <summary><MapPin size={19} aria-hidden="true" /><span>내 위치 확인·전달</span><small>선택</small></summary>
@@ -119,7 +126,21 @@ export function EmergencyHelp({ onClose, shake, onGuide, openedByShake = false }
         <p className="emergency-copy-status" role="status">{copyStatus || "위치와 입력한 내용은 자동 전송되지 않아요."}</p>
       </details>
 
-      <details className="help-shake-settings"><summary><Smartphone size={19} /><span>흔들어서 도움 열기</span><small>{shake.enabled ? '켜짐' : '꺼짐'}</small></summary><div className="help-shake-toggle"><p>앱 화면을 보고 있을 때, 가볍게 두 번 흔들면 이 화면을 열어요. 전화는 직접 선택해요.</p><button className={'sm-switch ' + (shake.enabled ? 'on' : '')} role="switch" aria-label="흔들어서 도움 열기" aria-checked={shake.enabled} disabled={shake.pending} onClick={shake.toggle}><span /></button></div><p className="quick-help-note" role="status">{shake.message || '기기와 브라우저가 지원할 때 사용할 수 있어요. 하단 도움 버튼으로도 같은 화면을 열 수 있어요.'}</p></details>
+      <section className="help-practice" aria-labelledby="help-practice-title">
+        <h2 id="help-practice-title">모의신고 연습</h2>
+        <p>두 번 흔들거나 아래 버튼을 누르면 10초 뒤 모의신고가 완료돼요.</p>
+        <div className="help-shake-toggle">
+          <span><Smartphone size={17} aria-hidden="true" /> 흔들기 모의신고</span>
+          <button type="button" className={'sm-switch ' + (shake.enabled ? 'on' : '')} role="switch" aria-label="흔들기 모의신고" aria-checked={shake.enabled} disabled={shake.pending} onClick={shake.toggle}><span /></button>
+        </div>
+        {shake.message && <p className="quick-help-note" role="status">{shake.message}</p>}
+        <button type="button" className="secondary" onClick={onMockReport}>모의신고 시작</button>
+      </section>
+      <details className="help-settings"><summary>사용법과 설정</summary>
+        <button type="button" className="help-guide-entry" onClick={onGuide}><BookOpen size={18} aria-hidden="true" /><span>사용법 보기</span><ArrowRight size={17} aria-hidden="true" /></button>
+        <OfflineNotice onSaved={onSaved} />
+        <AppConnection />
+      </details>
 
       <details className="emergency-guide">
         <summary>신고할 때 무엇을 말하나요?</summary>
@@ -127,7 +148,7 @@ export function EmergencyHelp({ onClose, shake, onGuide, openedByShake = false }
         <p>말로 신고하기 어려운 경우에는 휴대폰 문자 앱에서 112 또는 119에 위치와 상황을 직접 적어 보낼 수 있어요.</p>
         <div className="emergency-sources"><a href="https://www.police.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1007&q_bbscttSn=20250613093203002" target="_blank" rel="noreferrer">경찰청 신고 안내 ↗</a><a href="https://www.nfa.go.kr/nfa/safetyinfo/emergencyservice/119emergencydeclaration/" target="_blank" rel="noreferrer">소방청 신고 요령 ↗</a><a href="https://www.nfa.go.kr/nfa/news/pressrelease/press/?cntId=1902&mode=view&pageIdx=1&searchCondition=all" target="_blank" rel="noreferrer">소방청 문자 신고 안내 ↗</a></div>
       </details>
-      <details className="emergency-privacy"><summary>이용 안내·연락처 출처</summary><p>이 화면의 기기 위치와 입력 내용은 TourSafe 서버에 보내거나 저장하지 않아요. 창을 닫으면 지워지며, 직접 복사한 내용은 기기 클립보드에 남을 수 있어요.</p><p>위치는 버튼을 눌러 새로 확인해요. 지도에서 선택한 여행지 좌표를 내 위치로 사용하지 않아요. 이 화면에서는 통화·신고 접수 여부를 확인할 수 없어요.</p><p>1330은 한국관광공사의 여행 안내·통역 서비스예요. 긴급 출동을 요청할 때는 상황에 맞는112·119를 이용해 주세요.</p><div className="emergency-sources"><a href="https://112.go.kr/" target="_blank" rel="noreferrer">경찰청112</a><a href="https://www.nfa.go.kr/nfa/introduce/organizationidfo/situation/" target="_blank" rel="noreferrer">소방청119</a><a href="https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=140632" target="_blank" rel="noreferrer">한국관광공사1330</a></div></details>
+      <details className="emergency-privacy"><summary>이용 안내·연락처 출처</summary><p>이 화면의 기기 위치와 입력 내용은 TripFit 서버에 보내거나 저장하지 않아요. 창을 닫으면 지워지며, 직접 복사한 내용은 기기 클립보드에 남을 수 있어요.</p><p>위치는 버튼을 눌러 새로 확인해요. 지도에서 선택한 여행지 좌표를 내 위치로 사용하지 않아요. 이 화면에서는 통화·신고 접수 여부를 확인할 수 없어요.</p><p>1330은 한국관광공사의 여행 안내·통역 서비스예요. 긴급 출동을 요청할 때는 상황에 맞는112·119를 이용해 주세요.</p><div className="emergency-sources"><a href="https://112.go.kr/" target="_blank" rel="noreferrer">경찰청112</a><a href="https://www.nfa.go.kr/nfa/introduce/organizationidfo/situation/" target="_blank" rel="noreferrer">소방청119</a><a href="https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=140632" target="_blank" rel="noreferrer">한국관광공사1330</a></div></details>
     </div>
   </Modal>;
 }

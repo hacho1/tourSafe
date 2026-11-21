@@ -20,7 +20,7 @@ export function FirstVisitGuide({ onClose, onExplore }: { onClose: () => void; o
     const frame = requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
     return () => cancelAnimationFrame(frame);
   }, [step]);
-  return <Modal title="TourSafe 사용법" className="visit-guide-dialog" onClose={onClose}>
+  return <Modal title="TripFit 사용법" className="visit-guide-dialog" onClose={onClose}>
     <ol className="guide-progress" aria-label="사용법 진행">{STEPS.map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
     {step === 2 && <p className="demo-boundary"><ShieldCheck size={17} aria-hidden="true" /><strong>체험 모드 · 실제 전화·신고 없음</strong></p>}
     <div ref={scroll} className="guide-scroll">

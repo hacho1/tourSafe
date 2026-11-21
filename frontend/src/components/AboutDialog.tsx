@@ -3,7 +3,7 @@ import { Modal } from "./Modal";
 export function AboutDialog({ onClose }: { onClose: () => void }) {
   return (
     <Modal
-      title="TourSafe의 추천 기준"
+      title="TripFit의 추천 기준"
       onClose={onClose}
       className="about-dialog"
     >
@@ -15,7 +15,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           확인할 수 있는 정보로,
           <br />더 신중한 나들이를.
         </h2>
-        <p>TourSafe는 필요한 여행환경을 선택하고 긴급지원과 관광지원 정보를 찾도록 돕습니다. 범죄율이나 사고 가능성을 예측하지 않습니다.</p>
+        <p>TripFit는 필요한 여행환경을 선택하고 긴급지원과 관광지원 정보를 찾도록 돕습니다. 범죄율이나 사고 가능성을 예측하지 않습니다.</p>
         <h3>개인별 필요조건을 먼저 확인해요</h3>
         <p>필수조건 중 하나라도 이용할 수 없다고 확인되면 미충족, 미확인 항목이 있으면 확인 필요로 표시합니다. 필수조건을 설정하지 않았다면 적합성을 판정하지 않습니다. 선호조건이 필수조건의 미충족을 상쇄하지 않습니다.</p>
         <p>기존 정보 확인율은 초기 프로토타입 항목의 확인 비율이며 데이터 정확도나 안전 확률이 아닙니다. 이전 점수의 가중치는 사고 위험 감소에 대해 검증되지 않았습니다.</p>

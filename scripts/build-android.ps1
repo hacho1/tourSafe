@@ -20,7 +20,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'APK 빌드 실패' }
   $releaseRoot = Join-Path $projectRoot 'releases'
   New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
-  $apk = Join-Path $releaseRoot 'TourSafe-0.1.0-test.apk'
+  $apk = Join-Path $releaseRoot 'TripFit-0.1.2-test.apk'
   Copy-Item -LiteralPath (Join-Path $projectRoot 'android\app\build\outputs\apk\debug\app-debug.apk') -Destination $apk -Force
   Get-FileHash -LiteralPath $apk -Algorithm SHA256 | Format-List
   Write-Output "APK: $apk"

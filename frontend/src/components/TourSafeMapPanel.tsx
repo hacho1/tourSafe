@@ -98,7 +98,7 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
     map.on("load", () => { if (!disposed) { window.clearTimeout(watchdog); setLoaded(true); } });
     map.on("error", event => {
       if (!disposed) setFailed(true);
-      if (import.meta.env.DEV) console.warn("TourSafe basemap:", event.error.message);
+      if (import.meta.env.DEV) console.warn("TripFit basemap:", event.error.message);
     });
     const observer = new ResizeObserver(() => {
       if (container.current?.clientWidth && container.current.clientHeight) map.resize();
@@ -198,7 +198,7 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
   const current = points.find(point => point.id === selected);
   return <div className={`map-block ts-map-block ${theme} ${immersive ? "ts-immersive" : ""}`}>
     <div className="map-canvas-wrap">
-      <div ref={container} className="map-canvas ts-map-canvas" role="region" aria-label="투어세이프 실제 장소 지도" />
+      <div ref={container} className="map-canvas ts-map-canvas" role="region" aria-label="TripFit 실제 장소 지도" />
       {!immersive && <div className="ts-map-brand"><i /><span>TOURSAFE MAP</span><small>실제 지도</small></div>}
       {children}
       {immersive && <button className="calm-map-settings" ref={settingsTrigger} type="button" aria-label="지도 설정" onClick={() => setSettingsOpen(true)}><SlidersHorizontal size={19} /></button>}

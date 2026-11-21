@@ -18,7 +18,7 @@ export function ScoreBadge({
         summary.label
       ) : (
         <>
-          TourSafe <strong>{summary.total}</strong>
+          TripFit <strong>{summary.total}</strong>
           <span className="score-unit">/ 100</span>
         </>
       )}

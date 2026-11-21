@@ -26,7 +26,7 @@ export function tourSafeMapStyle(theme: MapTheme, detail = false): StyleSpecific
       paint: { "line-color": major ? c.major : c.road, "line-width": ["interpolate", ["linear"], ["zoom"], 10, major ? 1 : 0.5, 14, major ? 4 : 2.5, 16, major ? 10 : 6, 19, major ? 31 : 20] } },
   ];
   return {
-    version: 8, name: `TourSafe ${theme}`,
+    version: 8, name: `TripFit ${theme}`,
     glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     sources: { openmaptiles: { type: "vector", url: "https://tiles.openfreemap.org/planet" } },
     layers: [

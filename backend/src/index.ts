@@ -39,6 +39,6 @@ const errors: ErrorRequestHandler = (_error, _req, res, _next) => {
 app.use(errors);
 app.listen(config.port, config.host, () =>
   console.log(
-    `TourSafe API: http://${config.host}:${config.port} · ${config.tourKey ? "LIVE" : config.useMock ? "DEMO" : "LIVE (no key)"}`,
+    `TripFit API: http://${config.host}:${config.port} · ${config.tourKey ? "LIVE" : config.useMock ? "DEMO" : "LIVE (no key)"}`,
   ),
 );

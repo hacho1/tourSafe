@@ -195,7 +195,7 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
   const controls = <>
           <div className="calm-map-heading">
             <h2>주변 지원시설 지도</h2>
-            <button ref={locationTrigger} type="button" className="calm-location-choice" onClick={() => { locationRequest.cancel(); setLocating(false); setPicker(true); }} aria-label={`조회 위치 변경: ${originLabel}`}><MapPin size={18} aria-hidden="true" /><span><span className="refined-location-label"><span className="refined-mobile-brand" aria-hidden="true">TourSafe</span><small>{helpLocationContext(location)}</small></span><b>{originLabel}</b></span><Search size={18} aria-hidden="true" /></button>
+            <button ref={locationTrigger} type="button" className="calm-location-choice" onClick={() => { locationRequest.cancel(); setLocating(false); setPicker(true); }} aria-label={`조회 위치 변경: ${originLabel}`}><MapPin size={18} aria-hidden="true" /><span><span className="refined-location-label"><span className="refined-mobile-brand" aria-hidden="true">TripFit</span><small>{helpLocationContext(location)}</small></span><b>{originLabel}</b></span><Search size={18} aria-hidden="true" /></button>
             {(locationMessage || locating) && <p className="calm-location-message" role="status">{locationMessage || '위치 확인 중 · 아직 이전 위치의 정보예요.'}</p>}
             {location.kind === 'gps' && !locationMessage && !locating && <p className="calm-location-captured">{location.address}</p>}
           </div>
@@ -222,9 +222,11 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
               </>}</details>
             </article> : <div className="refined-facility-panel">
             <div className="refined-facility-heading"><div className="map-layer-intro"><span id="map-layer-label">주변 시설 위치</span><small>위치 자료 · 안전도 평가 아님</small></div><button id="nearby-facilities" className="map-layer-list" ref={facilityTrigger} type="button" onClick={event => openFacilities(event.currentTarget)}><List size={18} aria-hidden="true" /><span>시설 목록</span><ArrowUpRight size={16} aria-hidden="true" /></button></div>
+            <details className="map-layer-options"><summary>지도에 표시할 시설</summary>
             <div className="map-layer-bar" role="group" aria-labelledby="map-layer-label">
               {layerButtons.map(({ type, label, Icon }) => <button key={type} className={`map-layer-toggle layer-${type.toLowerCase()}`} aria-label={`${type === 'CCTV' ? 'CCTV 설치 위치' : label} 지도 표시`} aria-pressed={layers[type]} onClick={() => toggleLayer(type)}><Icon size={19} aria-hidden="true" /><span><span className="refined-layer-check" aria-hidden="true">{layers[type] && <Check size={12} />}</span>{label}</span></button>)}
             </div>
+            </details>
             {layerIssues.length > 0 ? <div className="map-layer-notice" role="status"><span>{layerIssues.join('·')} 자료 확인 불가</span><button onClick={refreshAll}>재조회</button></div> : layerLoading ? <div className="map-layer-notice" role="status">시설 정보를 불러오는 중…</div> : !points.length && <div className="map-layer-notice">{Object.values(layers).some(Boolean) ? '조회 자료에 표시할 시설이 없어요. 목록에서 확인해 주세요.' : '시설 표시를 모두 껐어요.'}</div>}
             {extraCategory && <button className="map-extra-layer" onClick={() => { setExtraCategory(null); setSelected(undefined); }}>{labels[extraCategory]} 표시 끄기<X size={14} /></button>}
             </div>}
@@ -235,8 +237,8 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
   return <>
     <SnapshotNotice at={facilities.data?.offlineSnapshotAt} label="주변 시설" />
     <SnapshotNotice at={hospitals.data?.offlineSnapshotAt} label="의료기관" />
-    <section id="live-safety-map" tabIndex={-1} className="tour-map tour-calm-map refined-map" aria-label="투어세이프 여행 지도">
-      {!online ? offlineMap : <MapErrorBoundary fallback={fallback}><Suspense fallback={<div className="map-block ts-map-block ts-immersive dark"><div className="map-canvas-wrap">{controls}<div className="map-recovery" role="status">투어세이프 지도를 여는 중…</div></div></div>}>
+    <section id="live-safety-map" tabIndex={-1} className="tour-map tour-calm-map refined-map" aria-label="TripFit 여행 지도">
+      {!online ? offlineMap : <MapErrorBoundary fallback={fallback}><Suspense fallback={<div className="map-block ts-map-block ts-immersive dark"><div className="map-canvas-wrap">{controls}<div className="map-recovery" role="status">TripFit 지도를 여는 중…</div></div></div>}>
         <TourSafeMapPanel points={points} selected={current?.id} onSelect={selectPlace} center={location} visible={visible} originLabel={location.kind === 'gps' ? '확인한 내 위치' : location.kind === 'saved' ? '저장한 방문지' : '조회 위치'} onViewCenter={setViewCenter} immersive settingsContent={close => <>
           <div className="calm-weather"><b>조회 위치의 날씨</b><p>{weatherQuery.loading ? '확인 중…' : weather?.temperature.value != null ? `${weather.temperature.value}° · ${weather.condition.value || '상태 미확인'}` : '날씨를 확인하지 못했어요.'}</p>{weather?.temperature.value != null && <small>{timeLabel(weather.temperature.updatedAt)} 관측 · 기상청</small>}<button onClick={refreshAll}>시설·날씨 새로 조회</button></div>
           <button className="calm-info-link" onClick={() => { close(); onAbout(); }}><Info size={18} />지도 자료·이용 안내</button>
