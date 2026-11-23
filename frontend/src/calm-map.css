@@ -173,10 +173,10 @@
 .filter-chips button:disabled { opacity:.5; cursor:not-allowed; }
 
 .saved-place-entry { padding:20px; margin:12px 0; border:1px solid #ceddcc; border-radius:14px; background:#f5f8f1; color:#294d38; }
-.saved-place-entry h3 { margin:0 0 10px; font-size:18px; }
-.saved-place-entry p { font-size:14px; line-height:1.7; }
-.saved-place-entry small { display:block; margin:10px 0; color:#587160; }
-.saved-place-entry a,.saved-place-entry button { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; margin:4px 8px 0 0; border:1px solid #b7cdb9; border-radius:8px; }
+.saved-place-entry h3:not(:where(dialog *)) { margin:0 0 10px; font-size:18px; }
+.saved-place-entry p:not(:where(dialog *)) { font-size:14px; line-height:1.7; }
+.saved-place-entry small:not(:where(dialog *)) { display:block; margin:10px 0; color:#587160; }
+.saved-place-entry :is(a,button):not(:where(dialog *)) { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; margin:4px 8px 0 0; border:1px solid #b7cdb9; border-radius:8px; }
 .view-toggle[hidden],.sort-control[hidden] { display:none; }
 
 .nearby-address-only input { width:100%; min-height:44px; margin-top:6px; border:1px solid #b3c7b8; border-radius:8px; padding:10px; font:inherit; }

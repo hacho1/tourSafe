@@ -86,7 +86,7 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
     map.on('moveend', () => { const point = map.getCenter(); latest.current.onViewCenter?.({ lat: point.lat, lng: point.lng }); });
     map.touchZoomRotate.disableRotation();
     map.getCanvas().setAttribute("aria-label", "실제 도로 지도 · 화살표 키로 이동, 더하기·빼기 키로 확대·축소");
-    map.addControl(new AttributionControl({ compact: false }), "bottom-right");
+    map.addControl(new AttributionControl({ compact: Boolean(walkingRoute) }), "bottom-right");
     map.addControl(new ScaleControl({ maxWidth: 80, unit: "metric" }), "bottom-left");
     fitRef.current = () => {
       const valid = latest.current.points.filter(validPoint);

@@ -6,7 +6,7 @@
 .walking-route-places dt { color:#385748; font-weight:700; }
 .walking-route-places dd { margin:0; overflow-wrap:anywhere; }
 .walking-route-actions, .walking-route-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.walking-route-options button { display:grid; gap:3px; min-width:0; min-height:80px; padding:9px 10px; text-align:left; color:#1c3b31; background:#fff; border:1px solid #a7bbb0; border-radius:10px; }
+.walking-route-options button { display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; gap:3px; min-width:0; min-height:80px; padding:9px 10px; text-align:left; color:#1c3b31; background:#fff; border:1px solid #a7bbb0; border-radius:10px; }
 .walking-route-options button[aria-pressed="true"] { border-color:#17604e; background:#e6f1e9; box-shadow:inset 0 0 0 1px #17604e; }
 .walking-route-options button:disabled { color:#536158; background:#f4f6f4; }
 .walking-route-options small, .walking-route-options span { font-size:.81rem; line-height:1.45; overflow-wrap:anywhere; }
@@ -16,3 +16,4 @@
 .walking-route-map .ts-map-tools { display:none; }
 .walking-route-body .walking-route-error { color:#943d32; }
 .walking-route-source a { text-decoration:underline; }
+.walking-route-map .ts-map-block { padding-bottom:0; }
