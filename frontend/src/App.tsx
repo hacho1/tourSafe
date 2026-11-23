@@ -1,4 +1,4 @@
-import { WalkingRouteOrigin } from './components/WalkingRoute';
+import { StartWalkingRoute, type RouteDestination } from './components/WalkingRoute';
 import { DEFAULT_REGION } from './config/constants';
 import type { HelpLocation } from './utils/helpLocation';
 import { savedHelpOrigin, type NearbyHelpAction, type NearbyHelpRequest } from './utils/nearbyHelp';
@@ -48,6 +48,7 @@ export function App() {
   const nearbyHelpSequence = useRef(0);
   const [showWelcome, setShowWelcome] = useState(() => readGuidanceValue(guidanceStorage('localStorage'), GUIDE_SEEN_KEY) !== 'seen');
   const guideTrigger = useRef<HTMLElement | null>(null);
+  const [walkingDestination, setWalkingDestination] = useState<RouteDestination | null>(null);
   const [mockReportOpen, setMockReportOpen] = useState(false);
   const emergencyTrigger = useRef<HTMLElement | null>(null);
   function openEmergency() {
@@ -103,12 +104,17 @@ export function App() {
   }
   function navigate(next: AppPage) {
     if (next !== 'saved') setSavedPlanRequest(null);
-    if (next !== 'map') setNearbyHelpRequest(null);
+    if (next !== 'map') { setNearbyHelpRequest(null); setWalkingDestination(null); }
     if (next === page) return;
     scrollPositions.current[page] = window.scrollY;
     if (next !== "map") setExploreVisited(true);
     setPage(next);
     window.history.pushState(null, "", `#${next}`);
+  }
+  function startWalkingRoute(destination: RouteDestination) {
+    setNearbyHelpRequest(null);
+    setWalkingDestination({ ...destination });
+    navigate('map');
   }
   function openSavedPlan(placeId: string) {
     setSavedPlanRequest({ placeId, requestId: ++savedPlanSequence.current });
@@ -116,6 +122,7 @@ export function App() {
   }
   const openNearbyHelp: NearbyHelpAction = (place, category) => {
     if (place?.source.kind === 'DEMO_DATA') return;
+    setWalkingDestination(null);
     const origin = savedHelpOrigin(place);
     if (origin) setQueryLocation(origin);
     setNearbyHelpRequest({ requestId: ++nearbyHelpSequence.current, category, origin });
@@ -132,7 +139,7 @@ export function App() {
       scrollPositions.current[page] = window.scrollY;
       const next = pageFromHash();
       if (next !== 'saved') setSavedPlanRequest(null);
-      if (next !== 'map') setNearbyHelpRequest(null);
+      if (next !== 'map') { setNearbyHelpRequest(null); setWalkingDestination(null); }
       if (next !== "map") setExploreVisited(true);
       setEmergencyOpen(false);
       setMockReportOpen(false);
@@ -143,13 +150,13 @@ export function App() {
     window.addEventListener("popstate", pop);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("popstate", pop); };
   }, [page]);
-  return <WalkingRouteOrigin.Provider value={queryLocation}><EmergencyContext.Provider value={() => openEmergency()}>
+  return <StartWalkingRoute.Provider value={startWalkingRoute}><EmergencyContext.Provider value={() => openEmergency()}>
     <OfflineNotice onlyOffline onSaved={() => navigate('saved')} />
     <div className="app-visit-notices">
       {showWelcome && <FirstVisitPrompt onGuide={openGuide} onSkip={skipWelcome} />}
     </div>
     <div className="app-page" hidden={page !== "map"}>
-      <SafetyMap location={queryLocation} onLocation={setQueryLocation} active={page === "map"} onExplore={() => navigate("explore")} onSaved={() => navigate("saved")} onOpenSavedPlan={openSavedPlan} nearbyHelpRequest={nearbyHelpRequest} onEmergency={() => openEmergency()} emergencyOpen={emergencyOpen || mockReportOpen || guideOpen || needsOpen} />
+      <SafetyMap location={queryLocation} onLocation={setQueryLocation} active={page === "map"} onExplore={() => navigate("explore")} onSaved={() => navigate("saved")} onOpenSavedPlan={openSavedPlan} nearbyHelpRequest={nearbyHelpRequest} walkingDestination={walkingDestination} onCloseWalkingRoute={() => setWalkingDestination(null)} onEmergency={() => openEmergency()} emergencyOpen={emergencyOpen || mockReportOpen || guideOpen || needsOpen} />
     </div>
     {exploreVisited && <div className="app-page" hidden={page === "map"}>
       <ExploreApp location={queryLocation} onLocation={setQueryLocation} active={page !== "map"} savedView={page === "saved"} onMap={() => navigate("map")} onBrowse={() => navigate("explore")} onSaved={() => navigate("saved")} savedPlanRequest={savedPlanRequest} onOpenSavedPlan={openSavedPlan} onNearbyHelp={openNearbyHelp} onEmergency={() => openEmergency()} />
@@ -165,5 +172,5 @@ export function App() {
     {mockReportOpen && <Modal title="모의신고" className="mock-report-dialog" onClose={closeMockReport} hideEmergency>
       <MockReportCountdown onClose={closeMockReport} />
     </Modal>}
-  </EmergencyContext.Provider></WalkingRouteOrigin.Provider>;
+  </EmergencyContext.Provider></StartWalkingRoute.Provider>;
 }

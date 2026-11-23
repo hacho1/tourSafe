@@ -1,3 +1,4 @@
+import type { RouteDestination } from '../components/WalkingRoute';
 import { useEffect, useRef, useState } from 'react';
 import { LocateFixed, Map, ShieldCheck } from 'lucide-react';
 import { Modal } from '../components/Modal';
@@ -12,7 +13,7 @@ import type { NearbyHelpRequest } from '../utils/nearbyHelp';
 import { SpotDetail } from './SpotDetail';
 import type { Recommendation } from '../../../shared/models';
 
-export function SafetyMap({ location, onLocation, active, onExplore, onSaved, onEmergency, emergencyOpen, onOpenSavedPlan, nearbyHelpRequest }: { location: HelpLocation; onLocation: (location: HelpLocation) => void; active: boolean; onExplore: () => void; onSaved: () => void; onEmergency: () => void; emergencyOpen: boolean; onOpenSavedPlan: (placeId: string) => void; nearbyHelpRequest: NearbyHelpRequest | null }) {
+export function SafetyMap({ location, onLocation, active, onExplore, onSaved, onEmergency, emergencyOpen, onOpenSavedPlan, nearbyHelpRequest, walkingDestination, onCloseWalkingRoute }: { location: HelpLocation; onLocation: (location: HelpLocation) => void; active: boolean; onExplore: () => void; onSaved: () => void; onEmergency: () => void; emergencyOpen: boolean; onOpenSavedPlan: (placeId: string) => void; nearbyHelpRequest: NearbyHelpRequest | null; walkingDestination: RouteDestination | null; onCloseWalkingRoute: () => void }) {
   const [dialog, setDialog] = useState<'place' | 'hospitals' | 'about' | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<Recommendation | null>(null);
   const hospitalTrigger = useRef<HTMLElement | null>(null);
@@ -31,6 +32,7 @@ export function SafetyMap({ location, onLocation, active, onExplore, onSaved, on
   useEffect(() => {
     if (!active) { setDialog(null); return; }
   }, [active]);
+  useEffect(() => { if (walkingDestination) setDialog(null); }, [walkingDestination]);
   return <div className="safety-app refined-safety-app">
     <a className="skip-link" href="#live-safety-map" onClick={event => { event.preventDefault(); document.getElementById('live-safety-map')?.focus(); }}>안심 지도로 바로가기</a>
     <header className="sm-header emergency-header"><div className="sm-header-inner">
@@ -47,7 +49,7 @@ export function SafetyMap({ location, onLocation, active, onExplore, onSaved, on
         </div>
         <div className="safety-purpose-actions"><TravelNeedsSettings /><button type="button" className="primary safety-explore-button" onClick={onExplore}>여행지 찾기</button></div>
       </section>
-      <LivePlacesMap location={location} onLocation={onLocation} visible={active} active={active && dialog === null && !emergencyOpen} nearbyHelpRequest={nearbyHelpRequest} onHospitals={openHospitals} onExplore={onExplore} onAbout={() => setDialog('about')} onOpenPlace={item => { setSelectedPlace(item); setDialog('place'); }} />
+      <LivePlacesMap location={location} onLocation={onLocation} visible={active} active={active && dialog === null && !emergencyOpen} nearbyHelpRequest={nearbyHelpRequest} walkingDestination={walkingDestination} onCloseWalkingRoute={onCloseWalkingRoute} onHospitals={openHospitals} onExplore={onExplore} onAbout={() => setDialog('about')} onOpenPlace={item => { setSelectedPlace(item); setDialog('place'); }} />
     </main>
     {dialog === 'hospitals' && <HospitalFinder origin={location} onClose={closeHospitals} />}
     {dialog === 'place' && selectedPlace && <SpotDetail item={selectedPlace} saved={saved.ids.includes(selectedPlace.spot.id)} onSave={() => saved.toggle(selectedPlace.spot)} onClose={() => setDialog(null)} initialTab="info" onOpenSavedPlan={onOpenSavedPlan} />}

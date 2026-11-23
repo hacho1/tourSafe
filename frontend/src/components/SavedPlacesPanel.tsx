@@ -18,9 +18,10 @@ export function SavedPlacesPanel({ current, openPlanRequest, onNearbyHelp, onBro
   const saved = useSavedPlaces();
   const online = useConnection();
   const [selected, setSelected] = useState<Recommendation | null>(null);
+  const [showPlan, setShowPlan] = useState(false);
   const [comparison, setComparison] = useState<Recommendation[]>([]);
   const [comparisonOpen, setComparisonOpen] = useState(false);
-  useEffect(() => { if (!active) { setSelected(null); setComparisonOpen(false); } }, [active]);
+  useEffect(() => { if (!active) { setSelected(null); setShowPlan(false); setComparisonOpen(false); } }, [active]);
   function compare(item: Recommendation) {
     setComparison(rows => rows.some(row => row.spot.id === item.spot.id) ? rows.filter(row => row.spot.id !== item.spot.id) : rows.length < 2 ? [...rows, item] : rows);
   }
@@ -82,7 +83,7 @@ export function SavedPlacesPanel({ current, openPlanRequest, onNearbyHelp, onBro
             <p><MapPin size={15} aria-hidden="true" />{place?.address || '주소 미제공'}</p>
             {place && <small>{place.source.name}</small>}
           </div>
-          <button className="icon-button saved-remove" type="button" onClick={() => saved.toggle(id)} aria-label={`${name} 저장 취소`}><Heart size={18} aria-hidden="true" /></button>
+          <button className="icon-button saved-remove favorite-button" type="button" onClick={() => saved.toggle(id)} aria-label={`${name} 저장 취소`}><Heart size={20} aria-hidden="true" /></button>
         </div>
         <div className="saved-place-primary">
           {recommendation && <button type="button" className="secondary" onClick={() => setSelected(recommendation)}>방문 정보</button>}
@@ -106,7 +107,7 @@ export function SavedPlacesPanel({ current, openPlanRequest, onNearbyHelp, onBro
         </details>
       </article>;
     })}
-    {selected && <SpotDetail item={selected} saved={saved.ids.includes(selected.spot.id)} onSave={() => saved.toggle(selected.spot)} onClose={() => setSelected(null)} />}
-    {comparisonOpen && comparison.length === 2 && <CandidateComparison items={comparison} scope="이 기기에 보관한 방문 자료" onClose={() => setComparisonOpen(false)} onOpen={item => { setComparisonOpen(false); setSelected(item); }} />}
+    {selected && <SpotDetail item={selected} saved={saved.ids.includes(selected.spot.id)} onSave={() => saved.toggle(selected.spot)} onClose={() => { setSelected(null); setShowPlan(false); }} focusPlan={showPlan} />}
+    {comparisonOpen && comparison.length === 2 && <CandidateComparison items={comparison} scope="이 기기에 보관한 방문 자료" onClose={() => setComparisonOpen(false)} onOpen={item => { setComparisonOpen(false); setShowPlan(true); setSelected(item); }} />}
   </div>;
 }

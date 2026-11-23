@@ -57,11 +57,11 @@ export function Modal({
         {!hideEmergency && openEmergency && <button type="button" className="modal-emergency" onClick={openEmergency} aria-label="도움 열기"><Siren size={16} aria-hidden="true" />도움</button>}
         <button
           type="button"
-          className="icon-button"
+          className="icon-button modal-close"
           onClick={onClose}
           aria-label="닫기"
         >
-          <X size={21} />
+          <X size={20} aria-hidden="true" />
         </button>
       </div>
       {!hideEmergency && <SavedFeedback />}

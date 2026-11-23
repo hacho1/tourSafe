@@ -1,4 +1,4 @@
-import { WalkingRouteButton } from './WalkingRoute';
+import { WalkingRouteButton, WalkingRoutePanel, useWalkingRoute, type RouteDestination } from './WalkingRoute';
 import { deviceLocation } from '../services/deviceLocation';
 import { ToiletAddressSearch } from './ToiletAddressSearch';
 import { useMapWeather } from '../hooks/useMapWeather';
@@ -34,9 +34,10 @@ const categories = [
 ] as const;
 const labels: Record<Category, string> = { CCTV: 'CCTV 설치 지점', MEDICAL: '병원·응급의료', TOURIST_INFO: '관광안내소', POLICE: '경찰시설', TOILET: '화장실', SPOT: '여행지' };
 const layerButtons = [{ type: 'MEDICAL', label: '의료', Icon: Hospital }, { type: 'POLICE', label: '경찰', Icon: Shield }, { type: 'TOILET', label: '화장실', Icon: Toilet }, { type: 'CCTV', label: 'CCTV', Icon: Video }] as const;
-export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLocation, onHospitals, active, visible, nearbyHelpRequest }: {
+export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLocation, onHospitals, active, visible, nearbyHelpRequest, walkingDestination, onCloseWalkingRoute }: {
   onExplore: () => void; onAbout: () => void; onOpenPlace: (item: Recommendation) => void;
   location: HelpLocation; onLocation: (location: HelpLocation) => void; onHospitals: () => void; active: boolean; visible: boolean; nearbyHelpRequest?: NearbyHelpRequest | null;
+  walkingDestination: RouteDestination | null; onCloseWalkingRoute: () => void;
 }) {
   const online = useConnection();
   const [category, setCategory] = useState<Category | null>(null);
@@ -46,6 +47,11 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
   const [selected, setSelected] = useState<string>();
   const [facilitiesOpen, setFacilitiesOpen] = useState(false);
   const [picker, setPicker] = useState(false);
+  const [destinationPicker, setDestinationPicker] = useState(false);
+  const [destinationPreview, setDestinationPreview] = useState<Region | null>(null);
+  const destinationSearch = useRef<HTMLButtonElement>(null);
+  const previewCard = useRef<HTMLElement>(null);
+  const route = useWalkingRoute(location, walkingDestination);
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
   const [locationRequest] = useState(() => createSearchLocationController());
@@ -66,7 +72,7 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
     if (!active) { locationRequest.cancel(); setLocating(false); }
     return () => locationRequest.cancel();
   }, [active, locationRequest]);
-  useEffect(() => { if (!visible) { setPicker(false); setFacilitiesOpen(false); } }, [visible]);
+  useEffect(() => { if (!visible) { setPicker(false); setDestinationPicker(false); setDestinationPreview(null); setFacilitiesOpen(false); } }, [visible]);
   useEffect(() => { setSelected(undefined); setExtraCategory(null); setViewCenter(location); setShowAll(false); listPosition.current = { scrollTop: 0 }; }, [location.lat, location.lng]);
   useEffect(() => {
     if (!visible || !nearbyHelpRequest || handledNearbyRequest.current === nearbyHelpRequest.requestId) return;
@@ -94,6 +100,23 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
     });
     return () => cancelAnimationFrame(frame);
   }, [facilitiesOpen, category]);
+  useEffect(() => {
+    if (!visible || !walkingDestination) return;
+    setFacilitiesOpen(false);
+    setPicker(false);
+    setDestinationPicker(false);
+    setDestinationPreview(null);
+    const frame = requestAnimationFrame(() => {
+      const section = document.getElementById('live-safety-map');
+      section?.focus({ preventScroll: true });
+      section?.scrollIntoView({ block:'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [visible, walkingDestination]);
+  function closeRoute() {
+    onCloseWalkingRoute();
+    requestAnimationFrame(() => destinationSearch.current?.focus({ preventScroll:true }));
+  }
   function chooseLocation(next: Region, kind: HelpLocation['kind'] = 'manual') {
     if (!Number.isFinite(next.lat) || !Number.isFinite(next.lng) || next.lat < 33 || next.lat > 39.5 || next.lng < 124 || next.lng > 132) {
       setLocationMessage('대한민국 내의 위치를 선택해 주세요.'); return;
@@ -193,6 +216,10 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
   function refreshAll() { facilities.refresh(); hospitals.refresh(); weatherQuery.refresh(); }
   const moved = Math.hypot(viewCenter.lat - location.lat, viewCenter.lng - location.lng) > 0.002;
   const list = showAll ? listPoints : listPoints.slice(0, 3);
+  const routePoint = walkingDestination || destinationPreview;
+  const displayedPoints: MapPoint[] = routePoint
+    ? [{ ...routePoint, id:'route-destination', type:'SPOT' }]
+    : points;
   const controls = <>
           <div className="calm-map-heading">
             <h2>주변 지원시설 지도</h2>
@@ -200,7 +227,7 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
             {(locationMessage || locating) && <p className="calm-location-message" role="status">{locationMessage || '위치 확인 중 · 아직 이전 위치의 정보예요.'}</p>}
             {location.kind === 'gps' && !locationMessage && !locating && <p className="calm-location-captured">{location.address}</p>}
           </div>
-          <div className="calm-map-bottom">
+          {!routePoint && <div className="calm-map-bottom">
             <div className="refined-map-actions">
             {moved && !selected && <button className="calm-search-here" type="button" onClick={() => chooseLocation({ ...viewCenter, name: '지도에서 선택한 위치', address: '지도 중심을 기준으로 조회했어요.' }, 'map')}><Search size={16} />이 위치에서 다시 찾기</button>}
             <button className="calm-locate" type="button" aria-label="내 위치로 찾기" onClick={locate} disabled={locating}><LocateFixed size={21} aria-hidden="true" /><span>{locating ? '확인 중' : '내 위치'}</span></button>
@@ -209,7 +236,7 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
               <div className="refined-card-toolbar"><button id="nearby-facilities" ref={facilityTrigger} className="refined-card-back" type="button" onClick={event => openFacilities(event.currentTarget)}><ChevronLeft size={18} aria-hidden="true" />목록으로</button><button className="calm-card-close" type="button" aria-label="장소 선택 해제" onClick={closePlace}><X size={21} aria-hidden="true" /></button></div>
               <h2 id="calm-selected-title" tabIndex={-1}>{current.name}</h2>
               <small>{currentFacility ? `${mapPointKind(currentFacility)} · ${facilityDistanceLabel(currentFacility)}` : `여행지 · 직선 ${distance(current.distanceMeters)}`}</small>
-              <div className="calm-card-actions">{currentPhone && <a href={currentPhone}><Phone size={18} />전화 문의</a>}{currentPlace ? <button onClick={() => onOpenPlace(currentPlace)}>방문 정보<ArrowUpRight size={18} /></button> : <WalkingRouteButton destination={current} />}</div>
+              <div className="calm-card-actions">{currentPhone && <a href={currentPhone}><Phone size={18} />전화 문의</a>}{currentPlace ? <button onClick={() => onOpenPlace(currentPlace)}>방문 정보<ArrowUpRight size={18} /></button> : null}<WalkingRouteButton destination={current} /></div>
               {currentFacility && (currentFacility.hospital || currentFacility.type === 'MEDICAL') && <p className="toilet-position-note">현재 접수·진료 가능 여부는 전화로 확인해 주세요.</p>}
               {currentFacility?.type === 'TOURIST_INFO' && <p className="toilet-position-note">관광·길 안내를 돕는 비긴급 시설이에요. 관광안내·통역 {currentFacility.source.kind === 'DEMO_DATA' ? '1330' : <a href="tel:1330">1330</a>}</p>}
               {currentFacility?.type === 'CCTV' && <p className="toilet-position-note">설치 위치 자료예요. 실제 작동 여부와 지역의 안전도는 알 수 없어요.</p>}
@@ -231,16 +258,19 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
             {layerIssues.length > 0 ? <div className="map-layer-notice" role="status"><span>{layerIssues.join('·')} 자료 확인 불가</span><button onClick={refreshAll}>재조회</button></div> : layerLoading ? <div className="map-layer-notice" role="status">시설 정보를 불러오는 중…</div> : !points.length && <div className="map-layer-notice">{Object.values(layers).some(Boolean) ? '조회 자료에 표시할 시설이 없어요. 목록에서 확인해 주세요.' : '시설 표시를 모두 껐어요.'}</div>}
             {extraCategory && <button className="map-extra-layer" onClick={() => { setExtraCategory(null); setSelected(undefined); }}>{labels[extraCategory]} 표시 끄기<X size={14} /></button>}
             </div>}
-          </div>
+          </div>}
   </>;
   const fallback = <div className="map-block ts-map-block ts-immersive dark"><div className="map-canvas-wrap">{controls}<MapFailureNotice /></div></div>;
   const offlineMap = <div className="map-block ts-map-block ts-immersive dark"><div className="map-canvas-wrap">{controls}<div className="offline-map-placeholder"><strong>오프라인 · 지도 배경 없이 시설 목록을 이용해요</strong><p>주소와 연락처는 미리 받은 자료예요. 아래 ‘시설 목록’에서 확인해 주세요.</p></div></div></div>;
   return <>
     <SnapshotNotice at={facilities.data?.offlineSnapshotAt} label="주변 시설" />
     <SnapshotNotice at={hospitals.data?.offlineSnapshotAt} label="의료기관" />
-    <section id="live-safety-map" tabIndex={-1} className="tour-map tour-calm-map refined-map" aria-label="TripFit 여행 지도">
+    <div className="walking-route-entry">
+      <button type="button" ref={destinationSearch} className="secondary" onClick={() => setDestinationPicker(true)}><Search size={16} aria-hidden="true" />목적지 검색</button>
+    </div>
+    <section id="live-safety-map" tabIndex={-1} className={`tour-map tour-calm-map refined-map${routePoint ? ' route-map-active' : ''}`} aria-label="TripFit 여행 지도">
       {!online ? offlineMap : <MapErrorBoundary fallback={fallback}><Suspense fallback={<div className="map-block ts-map-block ts-immersive dark"><div className="map-canvas-wrap">{controls}<div className="map-recovery" role="status">TripFit 지도를 여는 중…</div></div></div>}>
-        <TourSafeMapPanel points={points} selected={current?.id} onSelect={selectPlace} center={location} visible={visible} originLabel={location.kind === 'gps' ? '확인한 내 위치' : location.kind === 'saved' ? '저장한 방문지' : '조회 위치'} onViewCenter={setViewCenter} immersive settingsContent={close => <>
+        <TourSafeMapPanel points={displayedPoints} selected={routePoint ? undefined : current?.id} onSelect={routePoint ? undefined : selectPlace} center={destinationPreview ? destinationPreview : location} walkingRoute={walkingDestination ? route.line || undefined : undefined} routeKind={route.selected} visible={visible} originLabel={destinationPreview ? undefined : walkingDestination ? '출발지' : location.kind === 'gps' ? '확인한 내 위치' : location.kind === 'saved' ? '저장한 방문지' : '조회 위치'} onViewCenter={setViewCenter} immersive settingsContent={close => <>
           <div className="calm-weather"><b>조회 위치의 날씨</b><p>{weatherQuery.loading ? '확인 중…' : weather?.temperature.value != null ? `${weather.temperature.value}° · ${weather.condition.value || '상태 미확인'}` : '날씨를 확인하지 못했어요.'}</p>{weather?.temperature.value != null && <small>{timeLabel(weather.temperature.updatedAt)} 관측 · 기상청</small>}<button onClick={refreshAll}>시설·날씨 새로 조회</button></div>
           <button className="calm-info-link" onClick={() => { close(); onAbout(); }}><Info size={18} />지도 자료·이용 안내</button>
         </>}>
@@ -248,6 +278,21 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
         </TourSafeMapPanel>
       </Suspense></MapErrorBoundary>}
     </section>
+    {walkingDestination && <WalkingRoutePanel route={route} origin={originLabel} destination={walkingDestination} onClose={closeRoute} />}
+    {!walkingDestination && destinationPreview && <section ref={previewCard} className="walking-destination" tabIndex={-1} aria-label="선택한 목적지">
+      <div><h2>{destinationPreview.name}</h2><p>{destinationPreview.address}</p></div>
+      <WalkingRouteButton destination={destinationPreview} className="primary" />
+      <button type="button" className="icon-button route-preview-close" aria-label="목적지 선택 해제" onClick={() => { setDestinationPreview(null); destinationSearch.current?.focus(); }}><X size={20} aria-hidden="true" /></button>
+    </section>}
+    {destinationPicker && <HelpLocationPicker destinationMode title="목적지 검색" onClose={() => {
+      setDestinationPicker(false);
+      requestAnimationFrame(() => destinationSearch.current?.focus({ preventScroll:true }));
+    }} onChoose={place => {
+      onCloseWalkingRoute();
+      setDestinationPreview(place);
+      setDestinationPicker(false);
+      requestAnimationFrame(() => previewCard.current?.focus());
+    }} />}
     {picker && <HelpLocationPicker onChoose={chooseLocation} onClose={() => { pendingCategory.current = null; setPicker(false); requestAnimationFrame(() => locationTrigger.current?.focus({ preventScroll: true })); }} />}
     {facilitiesOpen && <Modal title="주변 시설" className="nearby-facilities-dialog refined-facilities-dialog" onClose={closeFacilities}>
       <div ref={facilitySheet} className="nearby-sheet-body" onScroll={event => { listPosition.current.scrollTop = event.currentTarget.scrollTop; }}>

@@ -19,6 +19,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import type { Recommendation, SupportFacility } from "../../../shared/models";
+import { Suitability } from '../components/TravelNeeds';
 import { Modal } from "../components/Modal";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 import { useEmergency } from "../components/EmergencyContext";
@@ -49,7 +50,7 @@ export function SpotDetail({
   saved,
   onSave,
   onClose,
-  initialTab = "safety",
+  initialTab,
   focusPlan = false,
   onOpenSavedPlan,
 }: {
@@ -65,7 +66,7 @@ export function SpotDetail({
   const openEmergency = useEmergency();
   const planSection = useRef<HTMLDivElement>(null);
   const planFormId = useId();
-  const [tab, setTab] = useState<Tab>(initialTab),
+  const [tab, setTab] = useState<Tab>(initialTab ?? (focusPlan ? "safety" : "info")),
     [selected, setSelected] = useState(spot.id);
   useEffect(() => {
     if (!focusPlan || tab !== 'safety') return;
@@ -117,12 +118,12 @@ export function SpotDetail({
             {demo && " · DEMO"}
           </span>
           <button
-            className={`save-button ${saved ? "saved" : ""}`}
+            className={`save-button favorite-button ${saved ? "saved" : ""}`}
             aria-label={`${spot.name} ${saved ? "저장 취소" : "저장"}`}
             aria-pressed={saved}
             onClick={onSave}
           >
-            <Heart size={21} fill={saved ? "currentColor" : "none"} />
+            <Heart size={20} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
           </button>
           {demo && spot.imageUrl && (
             <small className="detail-image-label">AI 생성 시연 이미지</small>
@@ -180,6 +181,10 @@ export function SpotDetail({
         >
           {tab === "info" && (
             <>
+              <section className="detail-condition-summary" aria-label="필요조건 확인">
+                <h3>필요조건 확인</h3>
+                <Suitability item={{ spot, score, weather, facilities, statuses, offlineSnapshotAt }} />
+              </section>
               <p className="detail-description">
                 {spot.description || "관광지 설명이 제공되지 않았습니다."}
               </p>

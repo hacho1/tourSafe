@@ -1,19 +1,42 @@
-.walking-route-dialog { width:min(680px, calc(100% - 28px)); }
-.walking-route-body { display:grid; gap:12px; padding:16px; }
-.walking-route-body p { margin:0; font-size:.875rem; line-height:1.55; color:#385748; }
-.walking-route-places { display:grid; gap:8px; margin:0; }
-.walking-route-places div { display:grid; grid-template-columns:3rem 1fr; gap:8px; align-items:baseline; padding:9px 12px; background:#eff4ee; border-radius:8px; }
-.walking-route-places dt { color:#385748; font-weight:700; }
-.walking-route-places dd { margin:0; overflow-wrap:anywhere; }
-.walking-route-actions, .walking-route-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.walking-route-entry {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  margin-block:0 10px;
+}
+.walking-route-entry button, .walking-destination button { min-height:44px; }
+.walking-destination, .walking-route-panel {
+  padding:14px;
+  background:#fff;
+  border:1px solid #ccdcd1;
+  border-radius:12px;
+  margin-top:10px;
+  color:#183e31;
+}
+.walking-destination, .walking-route-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.walking-destination > div, .walking-route-heading > div { min-width:0; overflow-wrap:anywhere; }
+.walking-destination h2, .walking-route-heading h2 { margin:0 0 4px; font-size:1rem; line-height:1.34; }
+.walking-destination p, .walking-route-panel p { margin:0; color:#385747; font-size:.875rem; line-height:1.45; }
+.walking-destination .primary { white-space:nowrap; flex-shrink:0; }
+.walking-route-panel { display:grid; gap:10px; }
+.walking-route-heading .route-close { flex:none; display:grid; place-items:center; width:44px; min-width:44px; height:44px; min-height:44px; padding:0; border-radius:50%; }
+.walking-route-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .walking-route-options button { display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; gap:3px; min-width:0; min-height:80px; padding:9px 10px; text-align:left; color:#1c3b31; background:#fff; border:1px solid #a7bbb0; border-radius:10px; }
 .walking-route-options button[aria-pressed="true"] { border-color:#17604e; background:#e6f1e9; box-shadow:inset 0 0 0 1px #17604e; }
 .walking-route-options button:disabled { color:#536158; background:#f4f6f4; }
+.walking-route-options b { font-size:.95rem; }
 .walking-route-options small, .walking-route-options span { font-size:.81rem; line-height:1.45; overflow-wrap:anywhere; }
 .walking-route-options span { font-weight:700; font-variant-numeric:tabular-nums; }
-.walking-route-map .ts-map-canvas { height:clamp(210px,34dvh,330px); min-height:0; }
-.walking-route-map .ts-map-brand { display:none; }
-.walking-route-map .ts-map-tools { display:none; }
-.walking-route-body .walking-route-error { color:#943d32; }
+.walking-route-error { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+.walking-route-error p { color:#943d32; }
+.walking-route-source summary { cursor:pointer; font-size:.86rem; padding-block:6px; color:#385747; }
+.walking-route-source p { margin-top:4px; }
 .walking-route-source a { text-decoration:underline; }
-.walking-route-map .ts-map-block { padding-bottom:0; }
+#live-safety-map.route-map-active .map-canvas-wrap { height:clamp(325px,53dvh,500px); min-height:0; }
+#live-safety-map.route-map-active .ts-map-canvas { height:100%; min-height:0; }
+#live-safety-map.route-map-active .calm-map-heading { pointer-events:none; }
+#live-safety-map.route-map-active .calm-map-heading button { pointer-events:auto; }
+@media (max-width:640px) {
+  #live-safety-map.route-map-active .map-canvas-wrap { height:clamp(235px,42dvh,360px); }
+  .walking-route-panel { margin-bottom:12px; }
+}

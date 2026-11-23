@@ -26,16 +26,14 @@ export function TravelNeedsSettings() {
   const [open,setOpen]=useState(false); const [needs]=useTravelNeeds();
   return <><button type="button" className="secondary needs-button" onClick={()=>setOpen(true)}>필요조건 설정 ({Object.keys(needs).length})</button>{open && <TravelNeedsDialog onClose={()=>setOpen(false)} />}</>;
 }
-export function Suitability({ item, compact=false, id }: { item: Recommendation; compact?: boolean; id?: string }) {
+export function Suitability({ item }: { item: Recommendation }) {
  const [needs]=useTravelNeeds(); const result=assess(item,needs);
  const required = result.results.filter(r=>r.preference==='required');
- const priority = {unmet:0,unknown:1,met:2};
- const rows = compact ? [...result.results].sort((a,b)=>Number(b.preference==='required')-Number(a.preference==='required') || priority[a.state]-priority[b.state]).slice(0,2) : result.results;
- return <section id={id} className={`suitability ${compact ? 'compact' : ''}`} aria-label="개인별 필요조건 판정">{compact && <b className="needs-box-title">필요조건 확인</b>}<strong>{STATUS[result.status]}</strong>
+ const rows = result.results;
+ return <div className="suitability"><strong>{STATUS[result.status]}</strong>
   {result.status==='unset' && <p>{result.results.length ? '저장된 선호조건을 보여드려요.' : '조건을 설정하면 장소별로 확인할 수 있어요.'}</p>}
   {required.length>0 && <p className="needs-summary">필수 {required.length}개 중 자료상 확인 {required.filter(r=>r.state==='met').length}개 · 자료 미확인 {required.filter(r=>r.state==='unknown').length}개{required.some(r=>r.state==='unmet') ? ' · 미충족 자료 있음' : ''}</p>}
-  {rows.length>0 && <ul>{rows.map(r=><li key={r.id}><b>{r.preference==='required'?'필수':'선호'} · {r.label}: {needEvidenceLabel(r)}</b>{!compact && <><p>{r.explanation}</p><small>출처: {r.source?.name || '미확인'} · 자료 기준일: {dateLabel(r.updatedAt)}</small></>}</li>)}</ul>}
-  {compact && result.results.length>rows.length && <small>조건 {result.results.length}개 중 {rows.length}개 표시</small>}
-  {!compact && <p className="needs-current-limit">자료상 확인은 현재 이용 가능 보장이 아니에요. 방문일의 운영·출입 여부와 실제 이용 동선을 확인해 주세요.</p>}
- </section>;
+  {rows.length>0 && <ul>{rows.map(r=><li key={r.id}><b>{r.preference==='required'?'필수':'선호'} · {r.label}: {needEvidenceLabel(r)}</b><p>{r.explanation}</p><small>출처: {r.source?.name || '미확인'} · 자료 기준일: {dateLabel(r.updatedAt)}</small></li>)}</ul>}
+  <p className="needs-current-limit">방문일의 운영·출입 여부와 실제 이용 동선을 확인해 주세요.</p>
+ </div>;
 }

@@ -114,7 +114,7 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
     if (!map || !walkingRoute) return;
     const id = 'tripfit-walking-route';
     function draw() {
-      if (!map || map.getSource(id)) return;
+      if (!map || !map.isStyleLoaded() || map.getSource(id)) return;
       map.addSource(id, { type:'geojson', data: { type:'Feature', properties:{},
         geometry:{ type:'LineString', coordinates:walkingRoute!.coordinates } } });
       map.addLayer({ id: id + '-border', type: 'line', source:id,
@@ -125,20 +125,20 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
         paint:{ 'line-color':routeKind === 'comfort' ? '#8eeab0' : '#7bccff','line-width':5 } });
       const bounds = new LngLatBounds();
       walkingRoute!.coordinates.forEach(point => bounds.extend(point));
-      map.fitBounds(bounds, { padding:32, maxZoom:17, duration:0 });
+      map.fitBounds(bounds, { padding:immersive ? { top:88, right:30, bottom:28, left:30 } : 32, maxZoom:17, duration:0 });
     }
     map.on('style.load', draw);
-    map.on('load', draw);
+    map.on('idle', draw);
     if (map.isStyleLoaded()) draw();
     return () => {
       map.off('style.load', draw);
-      map.off('load', draw);
+      map.off('idle', draw);
       if (mapRef.current !== map) return;
       if (map.getLayer(id)) map.removeLayer(id);
       if (map.getLayer(id + '-border')) map.removeLayer(id + '-border');
       if (map.getSource(id)) map.removeSource(id);
     };
-  }, [walkingRoute, routeKind, retry]);
+  }, [walkingRoute, routeKind, retry, immersive]);
   // Marker updates must not recreate the map or reset its camera when filtering.
   useEffect(() => {
     const map = mapRef.current;

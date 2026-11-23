@@ -12,7 +12,6 @@ import {
 import { useEffect, useId, useState } from "react";
 import type { Recommendation } from "../../../shared/models";
 import { distance } from "../utils/format";
-import { Suitability } from "./TravelNeeds";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 export function SpotImage({
   src,
@@ -70,12 +69,12 @@ export function SpotCard({
       style={{ animationDelay: `${index * 55}ms` }}
     >
       <button
-        className={`save-button ${saved ? "saved" : ""}`}
+        className={`save-button favorite-button ${saved ? "saved" : ""}`}
         onClick={onSave}
         aria-pressed={saved}
         aria-label={`${spot.name} ${saved ? "저장 취소" : "저장"}`}
       >
-        <Heart size={20} fill={saved ? "currentColor" : "none"} />
+        <Heart size={20} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
       </button>
       <button
         className="card-main"
@@ -89,6 +88,7 @@ export function SpotCard({
             name={demo ? `${spot.name} 시연용 이미지` : spot.name}
           />
           <div className="image-shade" />
+          <span className="spot-needs-label" id={assessmentId}>필요조건 확인</span>
           <span className="card-category">{spot.category}</span>
           {demo && spot.imageUrl && (
             <span className="image-demo">AI 시연 이미지</span>
@@ -103,7 +103,6 @@ export function SpotCard({
             <MapPin size={13} /> {current.offlineSnapshotAt ? '저장 당시 검색 위치 기준' : distance(spot.distanceMeters)}{" "}
             <span>{current.offlineSnapshotAt ? '· 현재 거리 미확인' : '· 직선거리'}</span>
           </p>
-          <Suitability id={assessmentId} item={current} compact />
           {score.hardFilter.length > 0 && <p id={warningId} className="card-condition-warning">방문 주의: {score.hardFilter.join(" · ")}</p>}
           <div className="card-conditions">
             <span
