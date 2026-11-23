@@ -89,9 +89,6 @@ export function SpotCard({
             name={demo ? `${spot.name} 시연용 이미지` : spot.name}
           />
           <div className="image-shade" />
-          <span className="card-grade">
-            <span>필요조건 확인</span>
-          </span>
           <span className="card-category">{spot.category}</span>
           {demo && spot.imageUrl && (
             <span className="image-demo">AI 시연 이미지</span>
