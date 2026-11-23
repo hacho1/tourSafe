@@ -1,9 +1,10 @@
+import { WalkingRouteButton } from './WalkingRoute';
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, CircleAlert, Clock3, Hospital as HospitalIcon, LoaderCircle, MapPin, Phone, RefreshCw } from "lucide-react";
+import { ChevronDown, CircleAlert, Clock3, Hospital as HospitalIcon, LoaderCircle, MapPin, Phone, RefreshCw } from "lucide-react";
 import { HOSPITAL_DAYS, HOSPITAL_REGIONS, type Hospital, type HospitalDay, type HospitalRegionId, type HospitalResponse } from "../../../shared/hospitals";
 import { Modal } from "./Modal";
 import { fetchHospitals, hospitalFetchErrorMessage } from "../services/hospitals";
-import { distance, mapLink } from "../utils/format";
+import { distance } from "../utils/format";
 import { createLatestRequestGate } from "../utils/nearby";
 import {
   ALL_DEPARTMENTS, UNKNOWN_DEPARTMENT, currentHospitalDay, departmentOptions, filterHospitals,
@@ -223,7 +224,7 @@ function HospitalCard({ hospital, day, mode, originName }: {
     <p className="hf-address"><MapPin size={15} aria-hidden="true" /><span>{hospital.address || "주소 정보 없음"}</span></p>
     {(contacts.phone || contacts.map) && <div className="hf-card-actions">
       {contacts.phone && <a href={contacts.phone}><Phone size={16} aria-hidden="true" /><span>전화 문의<small>{hospital.phone}</small></span></a>}
-      {contacts.map && <a href={mapLink(hospital.name, hospital)} target="_blank" rel="noopener noreferrer"><MapPin size={16} aria-hidden="true" />길찾기<ArrowUpRight size={14} aria-hidden="true" /><span className="hf-sr-only"> · 새 창</span></a>}
+      {contacts.map && <WalkingRouteButton destination={hospital} className="secondary" />}
     </div>}
     {mode === "LIVE" && !contacts.phone && <p className="hf-help">전화 연결에 사용할 수 있는 번호가 없어요.</p>}
     <details className="hf-source">

@@ -213,3 +213,15 @@ test('refresh recovers legacy identity without resurrecting a removed bookmark',
   store.toggle('legacy'); const writes=storage.writes.length;
   store.toggle(place,'refresh'); assert.deepEqual(store.getSnapshot().ids,[]); assert.equal(storage.writes.length,writes);
 });
+
+test('처음 저장한 사진을 다른 화면에서 읽고 새 정보에 사진이 빠져도 보존한다', () => {
+  const storage = new FakeStorage();
+  const place = { id: 'place', name: '여행지', address: '서울', lat: 37.5, lng: 127,
+    phone: null, source: { kind: 'PUBLIC_DATA' as const, name: '관광정보', url: null } };
+  const imageUrl = 'https://images.example.org/photo.jpg';
+  const store = createSavedPlacesStore(() => storage);
+  assert(store.toggle({ ...place, imageUrl }));
+  assert.equal(createSavedPlacesStore(() => storage).getSnapshot().places?.place?.imageUrl, imageUrl);
+  assert(store.toggle(place, 'refresh'));
+  assert.equal(store.getSnapshot().places?.place?.imageUrl, imageUrl);
+});

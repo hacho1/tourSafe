@@ -5,7 +5,7 @@ import { HOSPITAL_REGIONS } from '../../../shared/hospitals';
 import { searchRegions } from '../services/api';
 import { Modal } from './Modal';
 
-export function HelpLocationPicker({ onChoose, onClose }: { onChoose: (region: Region) => void; onClose: () => void }) {
+export function HelpLocationPicker({ onChoose, onClose, title = '도움받을 위치 선택' }: { onChoose: (region: Region) => void; onClose: () => void; title?: string }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Region[]>([]);
   const [message, setMessage] = useState('');
@@ -29,12 +29,12 @@ export function HelpLocationPicker({ onChoose, onClose }: { onChoose: (region: R
       if (!controller.signal.aborted) setMessage('장소를 불러오지 못했어요. 다시 검색해 주세요.');
     } finally { if (!controller.signal.aborted) setLoading(false); }
   }
-  return <Modal title="도움받을 위치 선택" onClose={onClose} className="safety-dialog help-location-dialog">
+  return <Modal title={title} onClose={onClose} className="safety-dialog help-location-dialog centered-dialog">
     <div className="help-location-body">
-      <p>숙소나 가까운 역을 찾아 선택해 주세요. 선택한 장소를 기준으로 도움받을 곳을 조회해요.</p>
+      <p>숙소나 가까운 역을 검색하거나 시작 위치를 선택해 주세요.</p>
       <form onSubmit={event => { event.preventDefault(); void search(); }}>
-        <label className="sr-only" htmlFor="help-place-query">숙소·역·장소 이름</label>
-        <input id="help-place-query" autoFocus value={query} onChange={event => change(event.target.value)} placeholder="예: 해운대역, 제주 시청" maxLength={80} />
+        <label className="help-location-search-label" htmlFor="help-place-query">숙소·역·장소 이름</label>
+        <input id="help-place-query" value={query} onChange={event => change(event.target.value)} placeholder="예: 해운대역, 제주 시청" maxLength={80} />
         <button type="submit" disabled={loading}><Search size={18} />검색</button>
       </form>
       <div role="status">{loading ? '장소를 찾고 있어요…' : message}</div>

@@ -1,8 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { MapPin, Map, ArrowUpRight, LoaderCircle } from "lucide-react";
+import { MapPin, Map, LoaderCircle } from "lucide-react";
 import type { Coordinates, FacilityType } from "../../../shared/models";
 import { loadKakaoMap } from "../services/kakaoMapApi";
-import { mapLink } from "../utils/format";
 import { MapErrorBoundary, MapFailureNotice } from './MapErrorBoundary';
 import { useConnection } from '../hooks/useConnection';
 const TourSafeMapPanel = lazy(() => import("./TourSafeMapPanel"));
@@ -176,16 +175,6 @@ export function MapPanel({
             <MapPin size={16} />
             <b>{selectedPoint.name}</b>
           </span>
-          {!demo && (
-            <a
-              href={mapLink(selectedPoint.name, selectedPoint)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Kakao 길찾기
-              <ArrowUpRight size={14} />
-            </a>
-          )}
         </div>
       )}
     </div>

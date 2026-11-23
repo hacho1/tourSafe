@@ -10,6 +10,8 @@ import { getHospitals } from "../services/hospitals.js";
 import { getMapFacilities, getMapWeather } from "../services/mapFacilities.js";
 import { searchUnlocatedToilets } from '../adapters/publicFacilities.js';
 
+import { compareWalkingRoutes, WalkingRouteError } from '../adapters/walkingRoutes.js';
+
 export const api = Router();
 api.get('/map-facilities', async (req, res, next) => {
   const lat = typeof req.query.lat === 'string' && req.query.lat.trim() ? Number(req.query.lat) : null;
@@ -25,6 +27,24 @@ api.get('/map-facilities', async (req, res, next) => {
 api.use((_req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   next();
+});
+api.get('/walking-routes', async (req, res) => {
+  const [fromLat, fromLng, toLat, toLng] = ['fromLat', 'fromLng', 'toLat', 'toLng'].map(key => {
+    const value = req.query[key];
+    return typeof value === 'string' && /^-?\d+(\.\d{1,6})?$/.test(value) ? Number(value) : null;
+  });
+  if (fromLat == null || fromLng == null || toLat == null || toLng == null ||
+      !validCoordinates(fromLat, fromLng) || !validCoordinates(toLat, toLng) ||
+      (fromLat === toLat && fromLng === toLng)) {
+    res.status(400).json({ message: '서로 다른 출발지와 도착지를 선택해 주세요.' });
+    return;
+  }
+  try {
+    res.json(await compareWalkingRoutes({ lat: fromLat, lng: fromLng }, { lat: toLat, lng: toLng }));
+  } catch (error) {
+    if (error instanceof WalkingRouteError) res.status(error.status).json({ message: error.message });
+    else res.status(502).json({ message: '도보 경로를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' });
+  }
 });
 api.get('/map-weather', async (req, res, next) => {
   const lat = typeof req.query.lat === 'string' && req.query.lat.trim() ? Number(req.query.lat) : null;

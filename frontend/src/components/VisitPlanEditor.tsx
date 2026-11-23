@@ -1,12 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useSavedPlaces } from '../hooks/useSavedPlaces';
 import { useTravelNeeds } from '../hooks/useTravelNeeds';
-import { dateLabel, phoneLink } from '../utils/format';
+import { phoneLink } from '../utils/format';
 import type { SavedPlaceIdentity } from '../utils/savedPlaces';
 import { buildVisitQuestions, NEEDS, type Need, type Preference, type Preferences } from '../utils/suitability';
 import { readVisitPlans, VISIT_PLANS_KEY, writeVisitPlan, type VisitPlan } from '../utils/visitPlans';
 import { addCurrentVisitQuestions, appendVisitQuestions } from '../utils/visitQuestionDraft';
-import { appendConfirmationNote } from '../utils/visitConfirmationNote';
 
 export interface VisitQuestionRequest { requestId: number; need: Need; preference: Preference }
 
@@ -18,6 +17,7 @@ const readErrorMessage = '저장한 확인 목록을 읽지 못했어요. 브라
 
 interface EditorState {
   questionsText: string;
+  checkedQuestions: string[];
   note: string;
   preferences: Preferences;
   savedAt: string | null;
@@ -29,16 +29,10 @@ function preferencesKey(preferences: Preferences) {
   return JSON.stringify(NEEDS.map(([id]) => preferences[id] || null));
 }
 
-function describePreferences(preferences: Preferences) {
-  const selected = NEEDS.flatMap(([id, label]) => preferences[id]
-    ? [`${label} ${preferences[id] === 'required' ? '필수' : '선호'}`]
-    : []);
-  return selected.length ? selected.join(' · ') : '설정한 방문 조건 없음';
-}
-
 function fromPlan(plan: VisitPlan): EditorState {
   return {
     questionsText: plan.questions.join('\n'),
+    checkedQuestions: plan.checkedQuestions || [],
     note: plan.note,
     preferences: { ...plan.preferences },
     savedAt: plan.savedAt,
@@ -50,6 +44,7 @@ function fromPlan(plan: VisitPlan): EditorState {
 function readEditorState(placeId: string, preferences: Preferences): EditorState {
   const fresh: EditorState = {
     questionsText: buildVisitQuestions(preferences).join('\n'),
+    checkedQuestions: [],
     note: '',
     preferences: { ...preferences },
     savedAt: null,
@@ -80,7 +75,6 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
   const [copyMessage, setCopyMessage] = useState('');
   const [questionMessage, setQuestionMessage] = useState('');
   const [beforeAdd, setBeforeAdd] = useState<Pick<EditorState, 'questionsText' | 'preferences'> | null>(null);
-  const [noteMessage, setNoteMessage] = useState('');
   const handledQuestionRequest = useRef<string | null>(null);
   const editorRef = useRef<HTMLFormElement>(null);
   const questionsRef = useRef<HTMLTextAreaElement>(null);
@@ -113,7 +107,6 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
     setCopyMessage('');
     setQuestionMessage('');
     setBeforeAdd(null);
-    setNoteMessage('');
   }
 
   useEffect(() => {
@@ -130,7 +123,6 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
       setCopyMessage('');
       setQuestionMessage('');
       setBeforeAdd(null);
-      setNoteMessage('');
     }
 
     const refresh = () => {
@@ -224,7 +216,7 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
     return () => cancelAnimationFrame(frame);
   }, [questionRequest, place.id]);
 
-  function updateDraft(next: Partial<Pick<EditorState, 'questionsText' | 'note' | 'preferences'>>) {
+  function updateDraft(next: Partial<Pick<EditorState, 'questionsText' | 'note' | 'preferences' | 'checkedQuestions'>>) {
     dirtyRef.current = true;
     setDirty(true);
     applyEditor({ ...editorStateRef.current, ...next });
@@ -233,23 +225,6 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
     setCopyMessage('');
     setQuestionMessage('');
     setBeforeAdd(null);
-    setNoteMessage('');
-  }
-
-  function addConfirmationTemplate() {
-    const result = appendConfirmationNote(editorStateRef.current.note, dateLabel(new Date().toISOString()), maxNoteLength);
-    if (!result.ok) {
-      setNoteMessage('메모 길이 한도를 넘어 양식을 추가하지 않았어요. 기존 내용은 그대로예요. 메모를 정리한 뒤 다시 시도해 주세요.');
-      return;
-    }
-    if (result.added) updateDraft({ note: result.text });
-    setNoteMessage('개인 확인 양식이에요. 날짜·방법·직접 들은 내용을 적어 주세요. 기관 자료의 판정은 바뀌지 않아요.');
-    requestAnimationFrame(() => {
-      const textarea = noteRef.current;
-      textarea?.scrollIntoView({ block: 'center' }); textarea?.focus({ preventScroll: true });
-      textarea?.setSelectionRange(result.text.length, result.text.length);
-      if (textarea) textarea.scrollTop = textarea.scrollHeight;
-    });
   }
 
   function addQuestions() {
@@ -275,6 +250,7 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
         : '';
   const noteError = editor.note.length > maxNoteLength ? `메모는 ${maxNoteLength}자 이내로 적어 주세요.` : '';
   const conditionsChanged = preferencesKey(editor.preferences) !== preferencesKey(currentPreferences);
+  const [editingQuestions, setEditingQuestions] = useState(false);
   const callHref = place.source.kind !== 'DEMO_DATA' ? phoneLink(place.phone) : null;
 
   function savePlan() {
@@ -282,7 +258,8 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
     setSaveError('');
     if (questionsError || noteError) {
       setSaveError(questionsError || noteError);
-      (questionsError ? questionsRef : noteRef).current?.focus();
+      if (questionsError) { setEditingQuestions(true); requestAnimationFrame(() => questionsRef.current?.focus()); }
+      else noteRef.current?.focus();
       return;
     }
     setSaving(true);
@@ -310,6 +287,7 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
         savedAt: new Date().toISOString(),
         preferences: { ...editor.preferences },
         questions,
+        ...(editor.checkedQuestions.length ? { checkedQuestions: editor.checkedQuestions.filter(question => questions.includes(question)) } : {}),
         note: editor.note,
       };
       try {
@@ -344,19 +322,24 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
   }
 
   return <form id={formId} className="visit-plan-editor" ref={editorRef} aria-labelledby={`${id}-heading`} onSubmit={event => { event.preventDefault(); savePlan(); }}>
-    <h4 className="visit-plan-heading" id={`${id}-heading`}>방문 전에 확인할 질문</h4>
-    <p className="visit-plan-help">직접 편집하는 질문과 개인 메모이며 기관 자료가 아니에요. 현재 이용 가능 여부를 보장하지 않아요. 이 기기에 저장하며 자동 전송하지 않아요.</p>
-    {editor.savedAt && <p className="visit-plan-meta">확인 목록 저장일: <time dateTime={editor.savedAt}>{dateLabel(editor.savedAt)}</time></p>}
-    <p className="visit-plan-preferences"><strong>{editor.savedAt ? '목록 저장 당시 조건' : '질문에 반영한 최근 조건'}</strong>: {describePreferences(editor.preferences)}</p>
-    <p className="visit-plan-help">이전 조건의 질문과 직접 작성·수정한 질문도 함께 남아 있을 수 있어요. 필요 없는 질문은 직접 지울 수 있어요.</p>
-    {dirty && <p className="visit-plan-meta">수정한 내용은 아직 저장되지 않았어요.</p>}
-    {conditionsChanged && <div className="visit-plan-warning" role="status">
-      <p>이 목록의 조건과 현재 방문 조건이 달라요. 이전 목록은 현재 조건의 충족 여부를 뜻하지 않아요.</p>
-      <p>현재 조건: {describePreferences(currentPreferences)}</p>
-    </div>}
-    <button type="button" onClick={addQuestions}>현재 조건 질문 추가</button>
-    {beforeAdd && <button type="button" className="visit-plan-undo" onClick={() => { updateDraft(beforeAdd); setQuestionMessage('직전 질문 추가를 되돌렸어요.'); }}>직전 질문 추가 되돌리기</button>}
-    {questionMessage && <p className="visit-plan-meta" role="status">{questionMessage}</p>}
+    <div className="visit-checklist-heading">
+      <h3 className="visit-plan-heading" id={`${id}-heading`} tabIndex={-1}>방문 체크리스트</h3>
+      <span>{questions.filter(question => editor.checkedQuestions.includes(question)).length}/{questions.length} 완료</span>
+    </div>
+    <ul className="visit-checklist">
+      {questions.map((question, index) => <li key={index}>
+        <label>
+          <input type="checkbox" checked={editor.checkedQuestions.includes(question)} onChange={event => {
+            updateDraft({ checkedQuestions: event.target.checked
+              ? [...editor.checkedQuestions, question]
+              : editor.checkedQuestions.filter(value => value !== question) });
+          }} />
+          <span>{question}</span>
+        </label>
+      </li>)}
+    </ul>
+    {conditionsChanged && <p className="visit-plan-meta">필요조건이 바뀌었어요. 항목 편집에서 현재 조건을 추가할 수 있어요.</p>}
+    {dirty && <p className="visit-plan-meta">저장하면 체크 상태와 메모가 이 기기에 남아요.</p>}
     {editor.readError && <div className="visit-plan-error" role="alert">
       <p>{editor.readError}</p>
       <button type="button" onClick={loadSavedList}>저장 목록 다시 읽기</button>
@@ -366,26 +349,27 @@ export function VisitPlanEditor({ place, formId, onOpenSaved, questionRequest }:
       <button type="button" onClick={loadSavedList}>저장된 목록 불러오기</button>
     </div>}
     <div className="visit-plan-field">
-      <label htmlFor={`${id}-questions`}>확인할 질문</label>
-      <p className="visit-plan-help" id={`${id}-questions-help`}>한 줄에 질문 하나, 최대 {maxQuestions}개·질문당 {maxQuestionLength}자 ({questions.length}/{maxQuestions}개)</p>
-      <textarea id={`${id}-questions`} ref={questionsRef} aria-label={`${place.name} 확인할 질문`} aria-describedby={`${id}-questions-help${questionsError ? ` ${id}-questions-error` : ''}`} aria-invalid={Boolean(questionsError)} rows={Math.max(3, Math.min(7, questions.length))} maxLength={maxQuestions * maxQuestionLength + maxQuestions - 1} value={editor.questionsText} onChange={event => updateDraft({ questionsText: event.target.value })} />
-      {questionsError && <p className="visit-plan-error" id={`${id}-questions-error`}>{questionsError}</p>}
+      <label htmlFor={`${id}-note`}>메모</label>
+      <textarea id={`${id}-note`} ref={noteRef} aria-label={`${place.name} 방문 메모`} placeholder="문의한 내용이나 챙길 것을 적어 보세요." aria-invalid={Boolean(noteError)} rows={3} maxLength={maxNoteLength} value={editor.note} onChange={event => updateDraft({ note: event.target.value })} />
+      {noteError && <p className="visit-plan-error">{noteError}</p>}
     </div>
-    <div className="visit-plan-field">
-      <label htmlFor={`${id}-note`}>방문 메모</label>
-      <p className="visit-plan-help">직접 확인한 날짜·방법·내용을 남겨요. 개인 기록은 기관 자료와 구분하며 현재 이용 가능 판정을 바꾸지 않아요.</p>
-      <button type="button" className="confirmation-note-template" onClick={addConfirmationTemplate}>개인 확인 메모 양식 추가</button>
-      {noteMessage && <p className="visit-plan-meta" role="status">{noteMessage}</p>}
-      <textarea id={`${id}-note`} ref={noteRef} aria-label={`${place.name} 방문 메모`} aria-describedby={`${id}-note-help${noteError ? ` ${id}-note-error` : ''}`} aria-invalid={Boolean(noteError)} rows={Math.max(3, Math.min(8, editor.note.split('\n').length))} maxLength={maxNoteLength} value={editor.note} onChange={event => updateDraft({ note: event.target.value })} />
-      <p className="visit-plan-help" id={`${id}-note-help`}>{editor.note.length}/{maxNoteLength}자</p>
-      {noteError && <p className="visit-plan-error" id={`${id}-note-error`}>{noteError}</p>}
-    </div>
-    <div className="visit-plan-actions">
-      <button type="submit" disabled={saving}>{saving ? '저장 중…' : '후보와 확인 목록 저장'}</button>
-      <button type="button" onClick={() => void copyQuestions()} disabled={!editor.questionsText.trim()} aria-label={`${place.name} 확인 질문 복사`}>질문 복사</button>
-      {callHref && <a href={callHref}>전화로 확인하기</a>}
-    </div>
-    {!callHref && <p className="visit-plan-help">{place.source.kind === 'DEMO_DATA' ? '시연 데이터에서는 전화 연결을 제공하지 않아요.' : place.phone ? '전화번호 형식을 확인할 수 없어 전화 연결을 제공하지 않아요.' : '전화번호가 제공되지 않았어요. 질문을 복사해 문의할 때 사용해 주세요.'}</p>}
+    <details className="visit-plan-edit" open={editingQuestions} onToggle={event => setEditingQuestions(event.currentTarget.open)}>
+      <summary>체크리스트 항목 편집</summary>
+      <div className="visit-plan-field">
+        <label htmlFor={`${id}-questions`}>항목 입력</label>
+        <textarea id={`${id}-questions`} ref={questionsRef} aria-label={`${place.name} 확인할 질문`} aria-invalid={Boolean(questionsError)} rows={4} maxLength={maxQuestions * maxQuestionLength + maxQuestions - 1} value={editor.questionsText} onChange={event => updateDraft({ questionsText: event.target.value })} />
+        <small>한 줄에 한 항목씩 적어 주세요.</small>
+        {questionsError && <p className="visit-plan-error">{questionsError}</p>}
+      </div>
+      <div className="visit-plan-actions">
+        <button type="button" onClick={addQuestions}>현재 조건 질문 추가</button>
+        {beforeAdd && <button type="button" onClick={() => updateDraft(beforeAdd)}>추가 되돌리기</button>}
+        <button type="button" onClick={() => void copyQuestions()} disabled={!editor.questionsText.trim()}>질문 복사</button>
+        {callHref && <a href={callHref}>전화 문의</a>}
+      </div>
+      {questionMessage && <p className="visit-plan-meta" role="status">{questionMessage}</p>}
+    </details>
+    {!formId && <div className="visit-plan-actions"><button type="submit" disabled={saving}>{saving ? '저장 중…' : '체크리스트·메모 저장'}</button></div>}
     {saveError && <p className="visit-plan-error" role="alert">{saveError}</p>}
     {saveMessage && <div className="visit-plan-success"><p className="visit-plan-status" role="status">{saveMessage}</p>{onOpenSaved && <button type="button" onClick={() => onOpenSaved(place.id)}>저장한 준비 카드 보기</button>}</div>}
     {copyMessage && <p className="visit-plan-status" role="status">{copyMessage}</p>}

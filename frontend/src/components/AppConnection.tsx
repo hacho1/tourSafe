@@ -31,12 +31,14 @@ export function AppConnection() {
   }
   return <>
     <div className="native-connection-entry"><span>TripFit 안드로이드</span><button type="button" onClick={() => { setMessage(''); setOpen(true); }}>서버 연결</button></div>
-    {open && <Modal title="서버 연결" className="safety-dialog" hideEmergency onClose={() => { request.current?.abort(); setBusy(false); setOpen(false); }}>
+    {open && <Modal title="서버 연결" className="safety-dialog centered-dialog" hideEmergency onClose={() => { request.current?.abort(); setBusy(false); setOpen(false); }}>
       <div className="native-connection-body"><h2>실시간 조회 서버 설정</h2><p>관광지·날씨·시설 정보를 조회할 서버를 설정해요. 오프라인 준비 카드와 메모는 앱 안에 보관해요.</p>
         <form onSubmit={event => { event.preventDefault(); void connect(); }}><label htmlFor="app-server">서버 주소</label><input id="app-server" type="url" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={url} disabled={busy} onChange={event => setUrl(event.target.value)} required />
           <button type="submit" disabled={busy}>{busy ? '연결 확인 중…' : '연결 확인 후 적용'}</button></form>
+        <div className="native-connection-actions">
         {defaultAppServer !== USB_SERVER && <button type="button" disabled={busy} onClick={() => setUrl(defaultAppServer)}>기본 서버 주소 사용</button>}
         <button type="button" disabled={busy} onClick={() => setUrl(USB_SERVER)}>USB 연결 주소 사용</button>
+        </div>
         <p>USB 연결은 PC에서 휴대폰 설치 스크립트를 실행해 주세요. Wi-Fi 연결은 PC의 내부 IP와 서버 포트를 입력해요.</p><p>공개 서버로 바꿀 때는 HTTPS 주소를 사용해 주세요. 앱에는 공공데이터 API 키가 포함되지 않아요.</p>
         {message && <p role="status">{message}</p>}
       </div>

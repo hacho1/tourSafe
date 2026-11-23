@@ -1,3 +1,4 @@
+import { WalkingRouteOrigin } from './components/WalkingRoute';
 import { DEFAULT_REGION } from './config/constants';
 import type { HelpLocation } from './utils/helpLocation';
 import { savedHelpOrigin, type NearbyHelpAction, type NearbyHelpRequest } from './utils/nearbyHelp';
@@ -142,7 +143,7 @@ export function App() {
     window.addEventListener("popstate", pop);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("popstate", pop); };
   }, [page]);
-  return <EmergencyContext.Provider value={() => openEmergency()}>
+  return <WalkingRouteOrigin.Provider value={queryLocation}><EmergencyContext.Provider value={() => openEmergency()}>
     <OfflineNotice onlyOffline onSaved={() => navigate('saved')} />
     <div className="app-visit-notices">
       {showWelcome && <FirstVisitPrompt onGuide={openGuide} onSkip={skipWelcome} />}
@@ -164,5 +165,5 @@ export function App() {
     {mockReportOpen && <Modal title="모의신고" className="mock-report-dialog" onClose={closeMockReport} hideEmergency>
       <MockReportCountdown onClose={closeMockReport} />
     </Modal>}
-  </EmergencyContext.Provider>;
+  </EmergencyContext.Provider></WalkingRouteOrigin.Provider>;
 }

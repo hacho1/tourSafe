@@ -131,7 +131,7 @@ export function EmergencyHelp({ onClose, shake, onGuide, onMockReport, onSaved }
         <p>두 번 흔들거나 아래 버튼을 누르면 10초 뒤 모의신고가 완료돼요.</p>
         <div className="help-shake-toggle">
           <span><Smartphone size={17} aria-hidden="true" /> 흔들기 모의신고</span>
-          <button type="button" className={'sm-switch ' + (shake.enabled ? 'on' : '')} role="switch" aria-label="흔들기 모의신고" aria-checked={shake.enabled} disabled={shake.pending} onClick={shake.toggle}><span /></button>
+          <button type="button" className={'sm-switch ' + (shake.enabled ? 'on' : '')} role="switch" aria-label="흔들기 모의신고" aria-checked={shake.enabled} disabled={shake.pending} onClick={shake.toggle}><span aria-hidden="true" /><b aria-hidden="true">{shake.enabled ? "켜짐" : "꺼짐"}</b></button>
         </div>
         {shake.message && <p className="quick-help-note" role="status">{shake.message}</p>}
         <button type="button" className="secondary" onClick={onMockReport}>모의신고 시작</button>

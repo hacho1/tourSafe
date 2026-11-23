@@ -1,3 +1,4 @@
+import { WalkingRouteButton } from './WalkingRoute';
 import { deviceLocation } from '../services/deviceLocation';
 import { ToiletAddressSearch } from './ToiletAddressSearch';
 import { useMapWeather } from '../hooks/useMapWeather';
@@ -20,7 +21,7 @@ import { useMapHospitals } from '../hooks/useMapHospitals';
 import { MAP_LAYER_STORAGE, mapLayerFor, mapPointKind, mergeMapMedical, parseMapLayers, type MapLayer } from '../utils/mapLayers';
 import { currentHospitalDay, hospitalHoursLabel } from '../utils/hospital';
 import type { MapPoint } from './MapPanel';
-import { dateLabel, distance, mapLink, phoneLink, timeLabel } from '../utils/format';
+import { dateLabel, distance, phoneLink, timeLabel } from '../utils/format';
 const TourSafeMapPanel = lazy(() => import('./TourSafeMapPanel'));
 type Category = MapFacilityType | 'SPOT';
 const categories = [
@@ -208,7 +209,7 @@ export function LivePlacesMap({ onExplore, onAbout, onOpenPlace, location, onLoc
               <div className="refined-card-toolbar"><button id="nearby-facilities" ref={facilityTrigger} className="refined-card-back" type="button" onClick={event => openFacilities(event.currentTarget)}><ChevronLeft size={18} aria-hidden="true" />목록으로</button><button className="calm-card-close" type="button" aria-label="장소 선택 해제" onClick={closePlace}><X size={21} aria-hidden="true" /></button></div>
               <h2 id="calm-selected-title" tabIndex={-1}>{current.name}</h2>
               <small>{currentFacility ? `${mapPointKind(currentFacility)} · ${facilityDistanceLabel(currentFacility)}` : `여행지 · 직선 ${distance(current.distanceMeters)}`}</small>
-              <div className="calm-card-actions">{currentPhone && <a href={currentPhone}><Phone size={18} />전화 문의</a>}{currentPlace ? <button onClick={() => onOpenPlace(currentPlace)}>방문 정보<ArrowUpRight size={18} /></button> : <a href={mapLink(current.name, current)} target="_blank" rel="noreferrer">길찾기<ArrowUpRight size={18} /></a>}</div>
+              <div className="calm-card-actions">{currentPhone && <a href={currentPhone}><Phone size={18} />전화 문의</a>}{currentPlace ? <button onClick={() => onOpenPlace(currentPlace)}>방문 정보<ArrowUpRight size={18} /></button> : <WalkingRouteButton destination={current} />}</div>
               {currentFacility && (currentFacility.hospital || currentFacility.type === 'MEDICAL') && <p className="toilet-position-note">현재 접수·진료 가능 여부는 전화로 확인해 주세요.</p>}
               {currentFacility?.type === 'TOURIST_INFO' && <p className="toilet-position-note">관광·길 안내를 돕는 비긴급 시설이에요. 관광안내·통역 {currentFacility.source.kind === 'DEMO_DATA' ? '1330' : <a href="tel:1330">1330</a>}</p>}
               {currentFacility?.type === 'CCTV' && <p className="toilet-position-note">설치 위치 자료예요. 실제 작동 여부와 지역의 안전도는 알 수 없어요.</p>}

@@ -7,6 +7,7 @@ export interface VisitPlan {
   savedAt: string;
   preferences: Preferences;
   questions: string[];
+  checkedQuestions?: string[];
   note: string;
 }
 
@@ -53,7 +54,9 @@ function savedAt(value: unknown): string {
 
 function validatePlan(value: unknown): VisitPlan {
   const plan = record(value);
-  exactKeys(plan, ['placeId', 'savedAt', 'preferences', 'questions', 'note']);
+  const keys = ['placeId', 'savedAt', 'preferences', 'questions', 'note'];
+  const hasChecked = Object.hasOwn(plan, 'checkedQuestions');
+  exactKeys(plan, hasChecked ? [...keys, 'checkedQuestions'] : keys);
   const preferences = record(plan.preferences);
   const selected: Preferences = {};
   for (const key of Object.getOwnPropertyNames(preferences)) {
@@ -64,12 +67,16 @@ function validatePlan(value: unknown): VisitPlan {
   const questions: unknown[] = Array.isArray(plan.questions) ? Array.from(plan.questions) : [];
   if (questions.length < 1 || questions.length > 20 ||
       !questions.every(question => typeof question === 'string' && question.trim().length > 0 && question.length <= 300)) return invalid();
+  const checked = plan.checkedQuestions;
+  if (hasChecked && (!Array.isArray(checked) ||
+      new Set(checked).size !== checked.length || !checked.every(question => questions.includes(question)))) return invalid();
   if (typeof plan.note !== 'string' || plan.note.length > 2000) return invalid();
   return {
     placeId: placeId(plan.placeId),
     savedAt: savedAt(plan.savedAt),
     preferences: selected,
     questions: questions as string[],
+    ...(hasChecked ? { checkedQuestions: checked as string[] } : {}),
     note: plan.note,
   };
 }

@@ -233,3 +233,14 @@ test('저장 한도 때문에 빠진 후보의 질문도 정리한다', () => {
   assert.deepEqual(store.getSnapshot().ids, [...ids.slice(1), 'new']);
   assert.deepEqual(readVisitPlans(storage), { 'place-1': plan('place-1') });
 });
+
+test('기존 방문 계획을 읽고 체크한 항목과 메모를 함께 다시 저장한다', () => {
+  const storage = new MemoryStorage();
+  const previous = plan();
+  seed(storage, { [previous.placeId]: previous });
+  assert.deepEqual(readVisitPlans(storage)[previous.placeId], previous);
+  const changed = { ...previous, checkedQuestions: [previous.questions[0]!] };
+  writeVisitPlan(storage, changed);
+  assert.deepEqual(readVisitPlans(storage)[previous.placeId], changed);
+  assert.throws(() => writeVisitPlan(storage, { ...changed, checkedQuestions: ['목록에 없는 항목'] }));
+});

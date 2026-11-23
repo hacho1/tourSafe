@@ -1,6 +1,6 @@
 import type { TouristSpot } from '../../../shared/models';
 import { removeVisitPlan } from './visitPlans';
-export type SavedPlaceIdentity = Pick<TouristSpot, 'id' | 'name' | 'address' | 'phone' | 'lat' | 'lng' | 'source'>;
+export type SavedPlaceIdentity = Pick<TouristSpot, 'id' | 'name' | 'address' | 'phone' | 'lat' | 'lng' | 'source'> & { imageUrl?: string | null };
 export type SavedPlace = SavedPlaceIdentity & { savedAt: string };
 export const SAVED_PLACES_KEY = "toursafe-saved";
 export const SAVED_PLACES_LIMIT = 100;
@@ -31,6 +31,10 @@ interface StorageChange {
 
 type ObserveStorage = (listener: (event: StorageChange) => void) => () => void;
 
+function safeSavedImage(value: unknown) {
+  return typeof value === "string" && (value.startsWith("https://") || /^\/images\/[\w.-]+$/.test(value)) ? value : null;
+}
+
 function parseSaved(raw: string | null): { ids: string[]; places: Record<string, SavedPlace> } {
   if (raw === null) return { ids: [], places: {} };
   const value = JSON.parse(raw);
@@ -41,7 +45,7 @@ function parseSaved(raw: string | null): { ids: string[]; places: Record<string,
   if (!Array.isArray(value)) for (const id of unique) {
     const p = value.places?.[id];
     if (p && p.id === id && typeof p.name === 'string' && p.name && Number.isFinite(p.lat) && Number.isFinite(p.lng) && typeof p.savedAt === 'string' && ['PUBLIC_DATA','KAKAO_MAP','DEMO_DATA'].includes(p.source?.kind)) {
-      places[id] = { id, name:p.name, lat:p.lat, lng:p.lng, address:typeof p.address === 'string' ? p.address : null, phone:typeof p.phone === 'string' ? p.phone : null, source:p.source, savedAt:p.savedAt };
+      places[id] = { id, name:p.name, lat:p.lat, lng:p.lng, address:typeof p.address === 'string' ? p.address : null, phone:typeof p.phone === 'string' ? p.phone : null, source:p.source, ...(safeSavedImage(p.imageUrl) ? { imageUrl:safeSavedImage(p.imageUrl) } : {}), savedAt:p.savedAt };
     }
   }
   return { ids: unique, places };
@@ -130,7 +134,8 @@ export function createSavedPlacesStore(
       const places = { ...current.places };
       if (!removing && typeof place !== 'string') {
         const { id, name, address, phone, lat, lng, source } = place;
-        places[id] = { id, name, address, phone, lat, lng, source, savedAt: current.places[id]?.savedAt || new Date().toISOString() };
+        const imageUrl = safeSavedImage(place.imageUrl) || current.places[id]?.imageUrl;
+        places[id] = { id, name, address, phone, lat, lng, source, ...(imageUrl ? { imageUrl } : {}), savedAt: current.places[id]?.savedAt || new Date().toISOString() };
       }
       for (const key of Object.keys(places)) if (!next.includes(key)) delete places[key];
       try {

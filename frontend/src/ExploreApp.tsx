@@ -409,7 +409,7 @@ export function ExploreApp({ location, onLocation, active, savedView, onMap, onB
                   {s.message}
                 </div>
               ))}
-          {(savedView || savedVisited) && <div hidden={!savedView}><SavedPlacesPanel active={savedView} current={data?.recommendations || []} openPlanRequest={savedView ? savedPlanRequest : null} onNearbyHelp={onNearbyHelp} /></div>}
+          {(savedView || savedVisited) && <div hidden={!savedView}><SavedPlacesPanel active={savedView} current={data?.recommendations || []} openPlanRequest={savedView ? savedPlanRequest : null} onNearbyHelp={onNearbyHelp} onBrowse={onBrowse} /></div>}
           {savedView ? null : loading ? (
             <>
               <p className="loading-label" role="status">

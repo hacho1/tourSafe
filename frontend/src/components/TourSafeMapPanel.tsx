@@ -7,7 +7,8 @@ import { Modal } from './Modal';
 import type { Coordinates } from "../../../shared/models";
 import type { MapPoint } from "./MapPanel";
 import { tourSafeMapStyle, type MapTheme } from "../config/tourSafeMapStyle";
-import { mapLink } from "../utils/format";
+import { WalkingRouteButton } from './WalkingRoute';
+import type { WalkingRoute } from '../../../shared/walkingRoutes';
 import { canExpandMapCluster, groupMapPins, isCctvOnly, originSafeOffsets, mapPointKind } from '../utils/mapLayers';
 
 setWorkerUrl(workerUrl);
@@ -32,12 +33,14 @@ function markerIcon(point: MapPoint) {
   return { svg, kind };
 }
 
-export default function TourSafeMapPanel({ points, selected, onSelect, center, immersive = false, children, originLabel, onViewCenter, settingsContent, visible = true }: {
+export default function TourSafeMapPanel({ points, selected, onSelect, center, immersive = false, children, originLabel, onViewCenter, settingsContent, visible = true, walkingRoute, routeKind = "fast" }: {
   points: MapPoint[]; selected?: string; onSelect?: (id: string) => void;
   center?: Coordinates; immersive?: boolean; children?: ReactNode;
   originLabel?: string; onViewCenter?: (center: Coordinates) => void;
   settingsContent?: (close: () => void) => ReactNode;
   visible?: boolean;
+  walkingRoute?: WalkingRoute;
+  routeKind?: "fast" | "comfort";
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
@@ -106,6 +109,36 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
     observer.observe(container.current);
     return () => { disposed = true; window.clearTimeout(watchdog); observer.disconnect(); mapRef.current = null; fitRef.current = () => {}; map.remove(); };
   }, [retry, immersive]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !walkingRoute) return;
+    const id = 'tripfit-walking-route';
+    function draw() {
+      if (!map || map.getSource(id)) return;
+      map.addSource(id, { type:'geojson', data: { type:'Feature', properties:{},
+        geometry:{ type:'LineString', coordinates:walkingRoute!.coordinates } } });
+      map.addLayer({ id: id + '-border', type: 'line', source:id,
+        layout:{ 'line-join':'round','line-cap':'round' },
+        paint:{ 'line-color':'#193b38','line-width':8 } });
+      map.addLayer({ id, type:'line', source:id,
+        layout:{ 'line-join':'round','line-cap':'round' },
+        paint:{ 'line-color':routeKind === 'comfort' ? '#8eeab0' : '#7bccff','line-width':5 } });
+      const bounds = new LngLatBounds();
+      walkingRoute!.coordinates.forEach(point => bounds.extend(point));
+      map.fitBounds(bounds, { padding:32, maxZoom:17, duration:0 });
+    }
+    map.on('style.load', draw);
+    map.on('load', draw);
+    if (map.isStyleLoaded()) draw();
+    return () => {
+      map.off('style.load', draw);
+      map.off('load', draw);
+      if (mapRef.current !== map) return;
+      if (map.getLayer(id)) map.removeLayer(id);
+      if (map.getLayer(id + '-border')) map.removeLayer(id + '-border');
+      if (map.getSource(id)) map.removeSource(id);
+    };
+  }, [walkingRoute, routeKind, retry]);
   // Marker updates must not recreate the map or reset its camera when filtering.
   useEffect(() => {
     const map = mapRef.current;
@@ -225,6 +258,6 @@ export default function TourSafeMapPanel({ points, selected, onSelect, center, i
     </div>
     <span className="map-cluster-announcement" role="status">{clusterMessage}</span>
     {clusterPoints.length > 0 && <Modal title={`모여 있는 시설 ${clusterPoints.length}곳`} className="nearby-facilities-dialog" onClose={closeCluster}><div className="nearby-sheet-body"><p className="nearby-range">같은 위치이거나 가까워 한 표식으로 묶었어요. 숫자는 현재 지도에 불러온 자료 수이며, 주변 전체 시설 수는 아니에요.</p><div className="nearby-result-list">{clusterPoints.map(point => <button key={point.id} onClick={() => { setClusterIds([]); onSelect?.(point.id); }}><span><b>{point.name}</b><small>{mapPointKind(point)}</small></span></button>)}</div></div></Modal>}
-    {!immersive && current && <div className="map-selected"><b>{current.name}</b><a href={mapLink(current.name, current)} target="_blank" rel="noreferrer">Kakao 길찾기 ↗</a></div>}
+    {!immersive && !walkingRoute && current && <div className="map-selected"><b>{current.name}</b><WalkingRouteButton destination={current} className="secondary" /></div>}
   </div>;
 }

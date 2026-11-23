@@ -1,4 +1,4 @@
-import type { Coordinates, DataSource, Evidence } from "../../../shared/models";
+import type { DataSource, Evidence } from "../../../shared/models";
 export function distance(meters: number): string {
   return meters < 1000
     ? `${Math.round(meters)}m`
@@ -37,9 +37,6 @@ export function timeLabel(value: string | null): string {
         minute: "2-digit",
         hour12: false,
       }).format(d);
-}
-export function mapLink(name: string, coords: Coordinates) {
-  return `https://map.kakao.com/link/to/${encodeURIComponent(name)},${coords.lat},${coords.lng}`;
 }
 export function phoneLink(phone: string | null): string | null {
   if (!phone || !/^\+?\d[\d\s().-]{6,22}\d$/.test(phone.trim())) return null;

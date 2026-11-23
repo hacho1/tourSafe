@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
-  ArrowUpRight,
   Check,
   ChevronRight,
   CircleAlert,
@@ -9,7 +8,6 @@ import {
   Hospital,
   Info,
   MapPin,
-  Navigation,
   Phone,
   Shield,
   Sun,
@@ -25,6 +23,7 @@ import { Modal } from "../components/Modal";
 import { useCurrentRecommendation } from '../hooks/useCurrentRecommendation';
 import { useEmergency } from "../components/EmergencyContext";
 import { SpotImage } from "../components/SpotCard";
+import { WalkingRouteButton } from '../components/WalkingRoute';
 import { FamilyPreparationCard } from '../components/FamilyPreparationCard';
 import { SnapshotNotice } from '../components/OfflineNotice';
 import { VisitFacilityInfo } from '../components/VisitFacilityInfo';
@@ -39,7 +38,6 @@ import {
   dateLabel,
   distance,
   evidenceLabel,
-  mapLink,
   phoneLink,
   sourceLabel,
   timeLabel,
@@ -265,7 +263,7 @@ export function SpotDetail({
           )}
           {tab === "safety" && (
             <>
-              <div ref={planSection} className="detail-visit-plan"><FamilyPreparationCard item={{ spot, score, weather, facilities, statuses }} formId={planFormId} onSelectFacility={selectFacility} onOpenSaved={onOpenSavedPlan ? placeId => { onClose(); onOpenSavedPlan(placeId); } : undefined} /></div>
+              <div ref={planSection} className="detail-visit-plan"><FamilyPreparationCard place={spot} formId={planFormId} onOpenSaved={onOpenSavedPlan ? placeId => { onClose(); onOpenSavedPlan(placeId); } : undefined} /></div>
               <details className="data-status"><summary>기존 항목의 정보 확인율 보기</summary><p className="small muted">기존 항목의 가중 정보 확인율 {score.coverage}% · 데이터 정확도나 안전 확률이 아닙니다.</p></details>
               <VisitFacilityInfo spot={spot} />
               <section className="detail-section check-section">
@@ -392,8 +390,7 @@ export function SpotDetail({
                 demo={demo}
               />
               <p className="small muted">
-                관광지와 시설 간 직선거리입니다. 도보경로와 예상 이동시간은
-                제공하지 않습니다.
+                지도 아래 거리 정보는 직선거리예요. 실제 도보 경로는 길찾기에서 확인해 주세요.
               </p>
               {demo && (
                 <p className="notice">
@@ -448,16 +445,7 @@ export function SpotDetail({
             {tab === 'safety' ? '예시 위치' : '예시 위치 확인'}
           </button>
         ) : (
-          <a
-            className="primary"
-            href={mapLink(spot.name, spot)}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Navigation size={17} />
-            {tab === 'safety' ? '길찾기' : 'Kakao 길찾기'}
-            <ArrowUpRight size={17} />
-          </a>
+          <WalkingRouteButton destination={spot} className={tab === "safety" ? "secondary" : "primary"} />
         )}
       </div>
     </Modal>
@@ -523,10 +511,7 @@ function FacilityCard({
           </a>
         )}
         {!demo && (
-          <a href={mapLink(f.name, f)} target="_blank" rel="noreferrer">
-            <Navigation size={14} />
-            길찾기
-          </a>
+          <WalkingRouteButton destination={f} className="secondary" />
         )}
       </div>
       <SourceMeta

@@ -37,7 +37,7 @@ export async function getTouristIdentity(id: string, request: typeof fetchData =
   const item = publicItems(await request(buildUrl(`${config.tourBase}/detailCommon2`, { ...common(), contentId: id })))[0];
   const lat = num(item?.mapy), lng = num(item?.mapx), name = plain(item?.title);
   if (!item || str(item.contentid) !== id || !name || !validCoordinates(lat, lng) || lng === null) throw new Error('PLACE_UNAVAILABLE');
-  return { id, name, lat, lng, address: plain(item.addr1), phone: plain(item.tel), source };
+  return { id, name, lat, lng, address: plain(item.addr1), phone: plain(item.tel), imageUrl: safeImage(item.firstimage), source };
 }
 export async function findTourRegions(query: string, request: typeof fetchData = fetchData): Promise<Region[]> {
   const rows = publicItems(await request(buildUrl(`${config.tourBase}/searchKeyword2`, {
